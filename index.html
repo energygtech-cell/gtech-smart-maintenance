@@ -1,309 +1,369 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G-Tech Smart Maintenance</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0f1e;--bg2:#0d1528;--card:#111827;--card2:#1a2235;
-    --border:#1e3a5f;--green:#00d084;--green2:#00ff9d;--blue:#0ea5e9;
-    --orange:#f97316;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;
-    --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-  #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(ellipse at 20% 50%,#0d2a4a 0%,var(--bg) 60%);}
-  .auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;
-    padding:40px;width:100%;max-width:420px;box-shadow:0 25px 60px rgba(0,0,0,0.5);}
-  .auth-logo{text-align:center;margin-bottom:30px;}
-  .auth-logo .logo-icon{width:70px;height:70px;background:linear-gradient(135deg,#00d084,#0ea5e9);
-    border-radius:18px;display:inline-flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:12px;}
-  .auth-logo h1{font-size:22px;font-weight:900;color:var(--green2);}
-  .auth-logo p{font-size:13px;color:var(--text2);margin-top:4px;}
-  .auth-tabs{display:flex;background:var(--bg2);border-radius:12px;padding:4px;margin-bottom:25px;}
-  .auth-tab{flex:1;padding:10px;text-align:center;border-radius:9px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);transition:all 0.3s;}
-  .auth-tab.active{background:var(--green);color:#000;}
-  .form-group{margin-bottom:16px;}
-  .form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:600;}
-  .form-group input{width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);
-    border-radius:10px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;}
-  .form-group input:focus{border-color:var(--green);}
-  .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),#00b36b);
-    border:none;border-radius:12px;color:#000;font-size:16px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
-  .auth-msg{text-align:center;margin-top:12px;font-size:13px;padding:10px;border-radius:8px;display:none;}
-  .auth-msg.error{background:rgba(239,68,68,0.1);color:var(--red);display:block;}
-  .auth-msg.success{background:rgba(0,208,132,0.1);color:var(--green);display:block;}
-  #app-screen{display:none;min-height:100vh;}
-  .sidebar{position:fixed;top:0;right:0;width:240px;height:100vh;background:var(--card);
-    border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform 0.3s;}
-  .sidebar-logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-  .sidebar-logo .slogo{width:42px;height:42px;background:linear-gradient(135deg,var(--green),var(--blue));
-    border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-  .sidebar-logo h2{font-size:13px;font-weight:700;color:var(--green2);line-height:1.4;}
-  .nav-items{flex:1;padding:15px 10px;overflow-y:auto;}
-  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;
-    cursor:pointer;color:var(--text2);font-size:14px;font-weight:600;margin-bottom:4px;transition:all 0.2s;}
-  .nav-item:hover{background:var(--card2);color:var(--text);}
-  .nav-item.active{background:rgba(0,208,132,0.15);color:var(--green);border:1px solid rgba(0,208,132,0.2);}
-  .nav-item.admin-nav{color:var(--purple);}
-  .nav-item.admin-nav.active{background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.2);}
-  .nav-icon{font-size:18px;width:24px;text-align:center;}
-  .nav-divider{height:1px;background:var(--border);margin:8px 10px;}
-  .sidebar-footer{padding:15px;border-top:1px solid var(--border);}
-  .user-info{display:flex;align-items:center;gap:10px;}
-  .user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));
-    border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
-  .user-name{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .btn-logout{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
-    color:var(--red);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;}
-  .main-content{margin-right:240px;min-height:100vh;padding:24px;}
-  .page-header{margin-bottom:24px;}
-  .page-header h1{font-size:24px;font-weight:900;}
-  .page-header p{color:var(--text2);font-size:14px;margin-top:4px;}
-  .page{display:none;}
-  .page.active{display:block;}
-  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
-  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;
-    position:relative;overflow:hidden;transition:transform 0.2s;}
-  .stat-card:hover{transform:translateY(-3px);}
-  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-  .stat-card.green::before{background:linear-gradient(90deg,var(--green),var(--blue));}
-  .stat-card.orange::before{background:linear-gradient(90deg,var(--orange),var(--yellow));}
-  .stat-card.red::before{background:linear-gradient(90deg,var(--red),var(--orange));}
-  .stat-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--purple));}
-  .stat-card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue));}
-  .stat-label{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px;}
-  .stat-value{font-size:32px;font-weight:900;}
-  .stat-value.green{color:var(--green);}
-  .stat-value.orange{color:var(--orange);}
-  .stat-value.red{color:var(--red);}
-  .stat-value.blue{color:var(--blue);}
-  .stat-value.purple{color:var(--purple);}
-  .stat-unit{font-size:13px;color:var(--text2);margin-top:4px;}
-  .stat-icon{position:absolute;top:16px;left:16px;font-size:28px;opacity:0.3;}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
-  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}
-  .card-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  .table-wrap{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th{padding:12px 16px;text-align:right;color:var(--text2);font-weight:600;font-size:12px;
-     border-bottom:1px solid var(--border);background:var(--bg2);}
-  td{padding:10px 16px;border-bottom:1px solid rgba(30,58,95,0.5);}
-  tr:hover td{background:rgba(255,255,255,0.02);}
-  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-  .badge.running{background:rgba(0,208,132,0.15);color:var(--green);}
-  .badge.idle{background:rgba(148,163,184,0.15);color:var(--text2);}
-  .badge.fault{background:rgba(239,68,68,0.15);color:var(--red);}
-  .badge.maintenance{background:rgba(234,179,8,0.15);color:var(--yellow);}
-  .badge.short{background:rgba(234,179,8,0.15);color:var(--yellow);}
-  .badge.long{background:rgba(239,68,68,0.15);color:var(--red);}
-  .badge.electrical{background:rgba(14,165,233,0.15);color:var(--blue);}
-  .badge.mechanical{background:rgba(249,115,22,0.15);color:var(--orange);}
-  .badge.spare_parts{background:rgba(168,85,247,0.15);color:var(--purple);}
-  .badge.raw_materials{background:rgba(234,179,8,0.15);color:var(--yellow);}
-  .badge.quality_defect{background:rgba(239,68,68,0.15);color:var(--red);}
-  .badge.other{background:rgba(148,163,184,0.15);color:var(--text2);}
-  .badge.admin{background:rgba(168,85,247,0.2);color:var(--purple);}
-  .badge.user{background:rgba(148,163,184,0.15);color:var(--text2);}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-  .form-row.single{grid-template-columns:1fr;}
-  .form-row.triple{grid-template-columns:1fr 1fr 1fr;}
-  .form-group2{display:flex;flex-direction:column;gap:6px;}
-  .form-group2 label{font-size:13px;color:var(--text2);font-weight:600;}
-  .form-group2 input,.form-group2 select,.form-group2 textarea{
-    padding:11px 14px;background:var(--bg2);border:1px solid var(--border);
-    border-radius:10px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;}
-  .form-group2 input:focus,.form-group2 select:focus{border-color:var(--green);}
-  .form-group2 select option{background:var(--card);}
-  .btn-green{background:linear-gradient(135deg,var(--green),#00b36b);border:none;border-radius:10px;
-    color:#000;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
-  .btn-blue{background:linear-gradient(135deg,var(--blue),#0284c7);border:none;border-radius:10px;
-    color:#fff;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
-  .btn-purple{background:linear-gradient(135deg,var(--purple),#9333ea);border:none;border-radius:10px;
-    color:#fff;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
-  .btn-red{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
-    color:var(--red);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;}
-  .btn-orange{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.3);
-    color:var(--orange);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;}
-  /* QUICK TABLE */
-  .quick-table{width:100%;border-collapse:collapse;}
-  .quick-table th{padding:12px 16px;text-align:right;color:var(--text2);font-weight:700;font-size:13px;
-    border-bottom:2px solid var(--border);background:var(--bg2);}
-  .quick-table td{padding:8px 12px;border-bottom:1px solid rgba(30,58,95,0.4);}
-  .quick-input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);
-    border-radius:8px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;
-    outline:none;text-align:center;transition:all 0.2s;}
-  .quick-input:focus{border-color:var(--green);background:rgba(0,208,132,0.05);}
-  .save-all-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--green),#00b36b);
-    border:none;border-radius:12px;color:#000;font-size:16px;font-weight:900;
-    cursor:pointer;font-family:'Cairo',sans-serif;margin-top:16px;
-    box-shadow:0 4px 20px rgba(0,208,132,0.3);transition:all 0.3s;}
-  .save-all-btn:hover{transform:translateY(-2px);}
-  .save-all-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-  /* DEPT CARDS */
-  .dept-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
-  .dept-card{background:var(--card2);border:2px solid var(--border);border-radius:14px;
-    padding:16px;text-align:center;transition:all 0.3s;position:relative;}
-  .dept-card .dept-num{font-size:28px;font-weight:900;color:var(--green);}
-  .dept-card .dept-name{font-size:13px;color:var(--text);margin-top:6px;font-weight:600;}
-  .dept-card .dept-count{font-size:11px;color:var(--text3);margin-top:4px;}
-  .dept-card .dept-actions{display:flex;gap:4px;justify-content:center;margin-top:8px;}
-  .btn-edit{background:rgba(14,165,233,0.2);border:none;border-radius:6px;
-    color:var(--blue);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:600;}
-  .btn-del{background:rgba(239,68,68,0.2);border:none;border-radius:6px;
-    color:var(--red);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:600;}
-  .machine-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-  .machine-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;}
-  .machine-card .m-code{font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px;}
-  .machine-card .m-name{font-size:14px;font-weight:700;margin-bottom:6px;}
-  .machine-card .m-dept{font-size:11px;color:var(--text3);margin-bottom:8px;}
-  .machine-card .m-actions{display:flex;gap:6px;margin-top:8px;}
-  .temp-gauges{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-  .temp-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
-  .temp-circle{width:80px;height:80px;border-radius:50%;margin:0 auto 10px;
-    display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;border:3px solid;}
-  .temp-circle.cool{border-color:var(--blue);color:var(--blue);background:rgba(14,165,233,0.1);}
-  .temp-circle.warm{border-color:var(--yellow);color:var(--yellow);background:rgba(234,179,8,0.1);}
-  .temp-circle.hot{border-color:var(--red);color:var(--red);background:rgba(239,68,68,0.1);}
-  .temp-dept{font-weight:700;font-size:13px;margin-bottom:6px;}
-  .bar-chart{display:flex;flex-direction:column;gap:10px;}
-  .bar-row{display:flex;align-items:center;gap:10px;}
-  .bar-label{width:90px;color:var(--text2);text-align:right;flex-shrink:0;font-size:12px;}
-  .bar-track{flex:1;height:26px;background:var(--bg2);border-radius:6px;overflow:hidden;}
-  .bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;
-    font-size:12px;font-weight:700;transition:width 1s ease;min-width:35px;}
-  .bar-fill.green{background:linear-gradient(90deg,var(--green),#00b36b);color:#000;}
-  .bar-fill.blue{background:linear-gradient(90deg,var(--blue),#0284c7);color:#fff;}
-  .bar-fill.orange{background:linear-gradient(90deg,var(--orange),#ea580c);color:#fff;}
-  .bar-fill.red{background:linear-gradient(90deg,var(--red),#dc2626);color:#fff;}
-  .bar-fill.purple{background:linear-gradient(90deg,var(--purple),#9333ea);color:#fff;}
-  .bar-fill.yellow{background:linear-gradient(90deg,var(--yellow),#ca8a04);color:#000;}
-  .success-msg{background:rgba(0,208,132,0.1);border:1px solid rgba(0,208,132,0.3);
-    color:var(--green);padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;display:none;}
-  .success-msg.show{display:block;}
-  .loading{text-align:center;padding:30px;color:var(--text2);font-size:14px;}
-  .empty{text-align:center;padding:20px;color:var(--text3);font-size:14px;}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;align-items:center;justify-content:center;}
-  .modal-overlay.show{display:flex;}
-  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:30px;width:100%;max-width:400px;}
-  .modal h3{font-size:18px;font-weight:700;margin-bottom:20px;}
-  .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
-  .hamburger{display:none;position:fixed;top:16px;left:16px;z-index:200;
-    background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;font-size:20px;}
-  .overlay-mob{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99;}
-  .overlay-mob.show{display:block;}
-  .date-bar{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px 16px;
-    background:var(--card2);border:1px solid var(--border);border-radius:12px;}
-  .date-bar label{font-size:14px;font-weight:600;color:var(--text2);white-space:nowrap;}
-  .date-bar input{padding:8px 12px;background:var(--bg);border:1px solid var(--border);
-    border-radius:8px;color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;outline:none;}
-  /* ADMIN */
-  .admin-banner{background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(14,165,233,0.15));
-    border:1px solid rgba(168,85,247,0.3);border-radius:16px;padding:20px;margin-bottom:24px;
-    display:flex;align-items:center;gap:16px;}
-  .admin-badge{background:linear-gradient(135deg,var(--purple),#9333ea);color:#fff;
-    padding:8px 16px;border-radius:20px;font-size:14px;font-weight:700;}
-  .user-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:20px;
-    margin-bottom:12px;display:flex;align-items:center;gap:16px;transition:all 0.2s;}
-  .user-card:hover{border-color:var(--blue);transform:translateY(-2px);}
-  .user-card .u-avatar{width:50px;height:50px;background:linear-gradient(135deg,var(--blue),var(--purple));
-    border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-  .user-card .u-info{flex:1;}
-  .user-card .u-name{font-size:16px;font-weight:700;margin-bottom:4px;}
-  .user-card .u-email{font-size:13px;color:var(--blue);margin-bottom:2px;}
-  .user-card .u-phone{font-size:13px;color:var(--text2);}
-  .user-card .u-date{font-size:11px;color:var(--text3);margin-top:4px;}
-  .user-card .u-actions{display:flex;gap:8px;flex-direction:column;align-items:flex-end;}
-  .log-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;
-    padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
-  .log-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
-    justify-content:center;font-size:16px;flex-shrink:0;}
-  .log-icon.elec{background:rgba(0,208,132,0.15);}
-  .log-icon.stop{background:rgba(239,68,68,0.15);}
-  .log-icon.temp{background:rgba(14,165,233,0.15);}
-  .log-icon.mach{background:rgba(249,115,22,0.15);}
-  .log-icon.dept{background:rgba(168,85,247,0.15);}
-  .log-info{flex:1;}
-  .log-title{font-size:13px;font-weight:600;}
-  .log-detail{font-size:12px;color:var(--text2);margin-top:2px;}
-  .log-time{font-size:11px;color:var(--text3);white-space:nowrap;}
-  .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
-  .filter-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border);
-    background:var(--bg2);color:var(--text2);cursor:pointer;font-size:13px;font-family:'Cairo',sans-serif;font-weight:600;transition:all 0.2s;}
-  .filter-btn.active{background:var(--green);color:#000;border-color:var(--green);}
-  @media(max-width:768px){
-    .sidebar{transform:translateX(100%);}
-    .sidebar.open{transform:translateX(0);}
-    .main-content{margin-right:0;padding:16px;padding-top:60px;}
-    .stats-grid{grid-template-columns:1fr 1fr;}
-    .grid-2,.grid-3{grid-template-columns:1fr;}
-    .dept-grid{grid-template-columns:1fr 1fr;}
-    .machine-grid{grid-template-columns:1fr 1fr;}
-    .temp-gauges{grid-template-columns:1fr 1fr;}
-    .form-row,.form-row.triple{grid-template-columns:1fr;}
-    .hamburger{display:block;}
-    .user-card{flex-direction:column;align-items:flex-start;}
-  }
+:root{
+  --bg:#0a0f1e;--bg2:#0d1528;--card:#111827;--card2:#1a2235;
+  --border:#1e3a5f;--green:#00d084;--green2:#00ff9d;--blue:#0ea5e9;
+  --orange:#f97316;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+[lang="en"] body,[lang="en"] *{font-family:'Inter',sans-serif;}
+
+/* ===== AUTH ===== */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 20% 50%,#0d2a4a 0%,var(--bg) 60%),
+              radial-gradient(ellipse at 80% 20%,#0a2d1f 0%,transparent 50%);}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,0.6);}
+.lang-switch{display:flex;justify-content:center;gap:8px;margin-bottom:24px;}
+.lang-btn{padding:8px 20px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--text2);cursor:pointer;font-size:13px;
+  font-family:'Cairo',sans-serif;font-weight:600;transition:all 0.3s;}
+.lang-btn.active{background:var(--green);color:#000;border-color:var(--green);}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo .logo-icon{width:72px;height:72px;background:linear-gradient(135deg,#00d084,#0ea5e9);
+  border-radius:20px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:32px;margin-bottom:14px;box-shadow:0 8px 30px rgba(0,208,132,0.3);}
+.auth-logo h1{font-size:22px;font-weight:900;color:var(--green2);}
+.auth-logo p{font-size:13px;color:var(--text2);margin-top:4px;}
+.auth-tabs{display:flex;background:var(--bg2);border-radius:12px;padding:4px;margin-bottom:24px;}
+.auth-tab{flex:1;padding:11px;text-align:center;border-radius:9px;cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--text2);transition:all 0.3s;}
+.auth-tab.active{background:var(--green);color:#000;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:7px;font-weight:600;}
+.form-group input,.form-group select{width:100%;padding:13px 16px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:11px;color:var(--text);font-size:14px;
+  font-family:'Cairo',sans-serif;outline:none;transition:all 0.3s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,208,132,0.1);}
+.form-group select option{background:var(--card);}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),#00b36b);
+  border:none;border-radius:12px;color:#000;font-size:16px;font-weight:700;
+  cursor:pointer;font-family:'Cairo',sans-serif;transition:all 0.3s;
+  box-shadow:0 4px 15px rgba(0,208,132,0.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,208,132,0.4);}
+.auth-msg{text-align:center;margin-top:12px;font-size:13px;padding:10px;border-radius:8px;display:none;}
+.auth-msg.error{background:rgba(239,68,68,0.1);color:var(--red);display:block;}
+.auth-msg.success{background:rgba(0,208,132,0.1);color:var(--green);display:block;}
+.forgot-link{text-align:center;margin-top:12px;font-size:13px;color:var(--text2);}
+.forgot-link a{color:var(--blue);cursor:pointer;text-decoration:none;}
+.forgot-link a:hover{text-decoration:underline;}
+
+/* ===== APP ===== */
+#app-screen{display:none;min-height:100vh;}
+.sidebar{position:fixed;top:0;right:0;width:250px;height:100vh;background:var(--card);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform 0.3s;}
+.sidebar-logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.slogo{width:44px;height:44px;background:linear-gradient(135deg,var(--green),var(--blue));
+  border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h2{font-size:13px;font-weight:700;color:var(--green2);line-height:1.4;}
+.sidebar-logo p{font-size:11px;color:var(--text3);margin-top:2px;}
+.nav-items{flex:1;padding:12px 8px;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;
+  cursor:pointer;color:var(--text2);font-size:14px;font-weight:600;margin-bottom:3px;transition:all 0.2s;}
+.nav-item:hover{background:var(--card2);color:var(--text);}
+.nav-item.active{background:rgba(0,208,132,0.15);color:var(--green);border:1px solid rgba(0,208,132,0.2);}
+.nav-item.admin-nav{color:var(--purple);}
+.nav-item.admin-nav.active{background:rgba(168,85,247,0.15);color:var(--purple);border-color:rgba(168,85,247,0.2);}
+.nav-icon{font-size:18px;width:24px;text-align:center;}
+.nav-divider{height:1px;background:var(--border);margin:6px 10px;}
+.company-badge{margin:10px;padding:10px 14px;background:rgba(0,208,132,0.08);
+  border:1px solid rgba(0,208,132,0.2);border-radius:10px;}
+.company-badge .cb-label{font-size:11px;color:var(--text3);margin-bottom:3px;}
+.company-badge .cb-name{font-size:13px;font-weight:700;color:var(--green);}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);}
+.user-info{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-logout{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
+  color:var(--red);padding:6px 10px;border-radius:8px;cursor:pointer;
+  font-size:11px;font-family:'Cairo',sans-serif;font-weight:600;}
+
+.main-content{margin-right:250px;min-height:100vh;padding:24px;}
+.page-header{margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.page-header h1{font-size:24px;font-weight:900;}
+.page-header p{color:var(--text2);font-size:14px;margin-top:4px;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* SHIFT INDICATOR */
+.shift-bar{display:flex;align-items:center;gap:12px;padding:12px 18px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;}
+.shift-badge{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;}
+.shift-badge.A{background:rgba(239,68,68,0.15);color:var(--red);}
+.shift-badge.B{background:rgba(0,208,132,0.15);color:var(--green);}
+.shift-badge.C{background:rgba(14,165,233,0.15);color:var(--blue);}
+.shift-time{font-size:12px;color:var(--text2);}
+.shift-clock{font-size:14px;font-weight:700;color:var(--text);margin-right:auto;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;position:relative;overflow:hidden;transition:transform 0.2s;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),var(--blue));}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),var(--yellow));}
+.stat-card.red::before{background:linear-gradient(90deg,var(--red),var(--orange));}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--purple));}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue));}
+.stat-label{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px;}
+.stat-value{font-size:30px;font-weight:900;}
+.stat-value.green{color:var(--green);}
+.stat-value.orange{color:var(--orange);}
+.stat-value.red{color:var(--red);}
+.stat-value.blue{color:var(--blue);}
+.stat-value.purple{color:var(--purple);}
+.stat-unit{font-size:12px;color:var(--text2);margin-top:4px;}
+.stat-icon{position:absolute;top:16px;left:16px;font-size:26px;opacity:0.25;}
+
+/* OEE */
+.oee-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}
+.oee-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.oee-item{text-align:center;padding:16px;background:var(--card2);border-radius:12px;}
+.oee-circle{width:80px;height:80px;border-radius:50%;margin:0 auto 10px;display:flex;
+  align-items:center;justify-content:center;font-size:20px;font-weight:900;border:4px solid;}
+.oee-circle.high{border-color:var(--green);color:var(--green);background:rgba(0,208,132,0.1);}
+.oee-circle.mid{border-color:var(--yellow);color:var(--yellow);background:rgba(234,179,8,0.1);}
+.oee-circle.low{border-color:var(--red);color:var(--red);background:rgba(239,68,68,0.1);}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}
+.card-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{padding:12px 16px;text-align:right;color:var(--text2);font-weight:600;font-size:12px;
+   border-bottom:1px solid var(--border);background:var(--bg2);}
+td{padding:10px 16px;border-bottom:1px solid rgba(30,58,95,0.5);}
+tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.running,.badge.operational{background:rgba(0,208,132,0.15);color:var(--green);}
+.badge.stopped,.badge.fault{background:rgba(239,68,68,0.15);color:var(--red);}
+.badge.maintenance{background:rgba(234,179,8,0.15);color:var(--yellow);}
+.badge.short{background:rgba(234,179,8,0.15);color:var(--yellow);}
+.badge.long{background:rgba(239,68,68,0.15);color:var(--red);}
+.badge.electrical{background:rgba(14,165,233,0.15);color:var(--blue);}
+.badge.mechanical{background:rgba(249,115,22,0.15);color:var(--orange);}
+.badge.raw_materials{background:rgba(234,179,8,0.15);color:var(--yellow);}
+.badge.quality{background:rgba(239,68,68,0.15);color:var(--red);}
+.badge.other{background:rgba(148,163,184,0.15);color:var(--text2);}
+.badge.shiftA{background:rgba(239,68,68,0.15);color:var(--red);}
+.badge.shiftB{background:rgba(0,208,132,0.15);color:var(--green);}
+.badge.shiftC{background:rgba(14,165,233,0.15);color:var(--blue);}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.single{grid-template-columns:1fr;}
+.form-row.triple{grid-template-columns:1fr 1fr 1fr;}
+.form-row.quad{grid-template-columns:1fr 1fr 1fr 1fr;}
+.form-group2{display:flex;flex-direction:column;gap:6px;}
+.form-group2 label{font-size:13px;color:var(--text2);font-weight:600;}
+.form-group2 input,.form-group2 select,.form-group2 textarea{
+  padding:11px 14px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;}
+.form-group2 input:focus,.form-group2 select:focus{border-color:var(--green);}
+.form-group2 select option{background:var(--card);}
+.btn-green{background:linear-gradient(135deg,var(--green),#00b36b);border:none;border-radius:10px;
+  color:#000;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#0284c7);border:none;border-radius:10px;
+  color:#fff;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;}
+.btn-red{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
+  color:var(--red);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;}
+.btn-orange{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.3);
+  color:var(--orange);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;}
+
+/* QUICK TABLE */
+.quick-table{width:100%;border-collapse:collapse;}
+.quick-table th{padding:12px 16px;text-align:right;color:var(--text2);font-weight:700;
+  font-size:12px;border-bottom:2px solid var(--border);background:var(--bg2);}
+.quick-table td{padding:8px 12px;border-bottom:1px solid rgba(30,58,95,0.4);}
+.quick-input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;
+  outline:none;text-align:center;transition:all 0.2s;}
+.quick-input:focus{border-color:var(--green);background:rgba(0,208,132,0.05);}
+.save-all-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#00b36b);
+  border:none;border-radius:12px;color:#000;font-size:16px;font-weight:900;
+  cursor:pointer;font-family:'Cairo',sans-serif;margin-top:16px;
+  box-shadow:0 4px 20px rgba(0,208,132,0.3);transition:all 0.3s;}
+.save-all-btn:hover{transform:translateY(-2px);}
+.save-all-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+/* LINE CARDS */
+.lines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:16px;}
+.line-card{background:var(--card2);border:2px solid var(--border);border-radius:14px;
+  padding:18px;transition:all 0.3s;cursor:pointer;}
+.line-card:hover{border-color:var(--green);}
+.line-card.selected{border-color:var(--green);background:rgba(0,208,132,0.05);}
+.line-name{font-size:15px;font-weight:700;margin-bottom:6px;}
+.line-resources{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.res-tag{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.res-tag.electricity{background:rgba(234,179,8,0.2);color:var(--yellow);}
+.res-tag.water{background:rgba(14,165,233,0.2);color:var(--blue);}
+.res-tag.oil{background:rgba(249,115,22,0.2);color:var(--orange);}
+.res-tag.gas{background:rgba(168,85,247,0.2);color:var(--purple);}
+.res-tag.other{background:rgba(148,163,184,0.2);color:var(--text2);}
+
+/* BAR CHART */
+.bar-chart{display:flex;flex-direction:column;gap:10px;}
+.bar-row{display:flex;align-items:center;gap:10px;}
+.bar-label{width:90px;color:var(--text2);text-align:right;flex-shrink:0;font-size:12px;}
+.bar-track{flex:1;height:26px;background:var(--bg2);border-radius:6px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;
+  font-size:12px;font-weight:700;min-width:35px;transition:width 1s ease;}
+.bar-fill.green{background:linear-gradient(90deg,var(--green),#00b36b);color:#000;}
+.bar-fill.blue{background:linear-gradient(90deg,var(--blue),#0284c7);color:#fff;}
+.bar-fill.orange{background:linear-gradient(90deg,var(--orange),#ea580c);color:#fff;}
+.bar-fill.red{background:linear-gradient(90deg,var(--red),#dc2626);color:#fff;}
+.bar-fill.purple{background:linear-gradient(90deg,var(--purple),#9333ea);color:#fff;}
+.bar-fill.yellow{background:linear-gradient(90deg,var(--yellow),#ca8a04);color:#000;}
+
+.success-msg{background:rgba(0,208,132,0.1);border:1px solid rgba(0,208,132,0.3);
+  color:var(--green);padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;display:none;}
+.success-msg.show{display:block;}
+.loading{text-align:center;padding:30px;color:var(--text2);}
+.empty{text-align:center;padding:20px;color:var(--text3);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:30px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+
+/* HAMBURGER */
+.hamburger{display:none;position:fixed;top:16px;left:16px;z-index:200;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;font-size:20px;}
+.overlay-mob{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99;}
+.overlay-mob.show{display:block;}
+
+/* SETTINGS PAGE */
+.settings-section{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+.settings-section h3{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--green);}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-right:0;padding:16px;padding-top:60px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .form-row,.form-row.triple,.form-row.quad{grid-template-columns:1fr;}
+  .hamburger{display:block;}
+  .oee-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
+<!-- ===== AUTH ===== -->
 <div id="auth-screen">
   <div class="auth-box">
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('ar')">🇸🇦 العربية</button>
+      <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+    </div>
     <div class="auth-logo">
       <div class="logo-icon">⚙️</div>
-      <h1>G-Tech Smart</h1>
-      <p>لوحة تحكم الصيانة الذكية</p>
+      <h1 data-ar="G-Tech Smart" data-en="G-Tech Smart">G-Tech Smart</h1>
+      <p data-ar="لوحة تحكم الصيانة الذكية" data-en="Smart Maintenance Dashboard">لوحة تحكم الصيانة الذكية</p>
     </div>
     <div class="auth-tabs">
-      <div class="auth-tab active" onclick="switchTab('login')">تسجيل الدخول</div>
-      <div class="auth-tab" onclick="switchTab('register')">حساب جديد</div>
+      <div class="auth-tab active" onclick="switchTab('login')" data-ar="تسجيل الدخول" data-en="Login">تسجيل الدخول</div>
+      <div class="auth-tab" onclick="switchTab('register')" data-ar="حساب جديد" data-en="Register">حساب جديد</div>
     </div>
+
+    <!-- LOGIN -->
     <div id="login-form">
-      <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="login-email" placeholder="example@email.com"></div>
-      <div class="form-group"><label>كلمة المرور</label><input type="password" id="login-pass" placeholder="••••••••"></div>
-      <button class="btn-primary" onclick="login()">دخول</button>
+      <div class="form-group">
+        <label data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+        <input type="email" id="login-email" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
+        <label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+        <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <button class="btn-primary" onclick="login()" data-ar="دخول" data-en="Login">دخول</button>
+      <div class="forgot-link">
+        <span data-ar="نسيت كلمة المرور؟ " data-en="Forgot password? ">نسيت كلمة المرور؟ </span>
+        <a onclick="showForgot()" data-ar="تواصل مع المدير" data-en="Contact Admin">تواصل مع المدير</a>
+      </div>
     </div>
+
+    <!-- REGISTER -->
     <div id="register-form" style="display:none">
-      <div class="form-group"><label>الاسم الكامل</label><input type="text" id="reg-name" placeholder="أحمد محمد"></div>
-      <div class="form-group"><label>رقم الجوال</label><input type="tel" id="reg-phone" placeholder="05xxxxxxxx"></div>
-      <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="reg-email" placeholder="example@email.com"></div>
-      <div class="form-group"><label>كلمة المرور</label><input type="password" id="reg-pass" placeholder="8 أحرف على الأقل"></div>
-      <button class="btn-primary" onclick="register()">إنشاء حساب</button>
+      <div class="form-group">
+        <label data-ar="الاسم الكامل" data-en="Full Name">الاسم الكامل</label>
+        <input type="text" id="reg-name" placeholder="أحمد محمد">
+      </div>
+      <div class="form-group">
+        <label data-ar="اسم الشركة" data-en="Company Name">اسم الشركة</label>
+        <input type="text" id="reg-company" placeholder="شركة المستقبل للصناعة">
+      </div>
+      <div class="form-group">
+        <label data-ar="رقم الجوال" data-en="Phone Number">رقم الجوال</label>
+        <input type="tel" id="reg-phone" placeholder="05xxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+        <input type="email" id="reg-email" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
+        <label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+        <input type="password" id="reg-pass" placeholder="8 أحرف على الأقل">
+      </div>
+      <button class="btn-primary" onclick="register()" data-ar="إنشاء حساب" data-en="Create Account">إنشاء حساب</button>
     </div>
     <div class="auth-msg" id="auth-msg"></div>
   </div>
 </div>
 
+<!-- ===== APP ===== -->
 <div id="app-screen">
   <div class="hamburger" onclick="toggleSidebar()">☰</div>
   <div class="overlay-mob" id="overlay" onclick="toggleSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="slogo">⚙️</div>
-      <h2>G-Tech Smart<br>Maintenance</h2>
+      <div>
+        <h2>G-Tech Smart</h2>
+        <p data-ar="الصيانة الذكية" data-en="Smart Maintenance">الصيانة الذكية</p>
+      </div>
+    </div>
+    <div class="company-badge">
+      <div class="cb-label" data-ar="الشركة" data-en="Company">الشركة</div>
+      <div class="cb-name" id="company-name-display">--</div>
     </div>
     <div class="nav-items">
-      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> لوحة التحكم</div>
-      <div class="nav-item" onclick="showPage('departments',this)"><span class="nav-icon">🏢</span> الأقسام</div>
-      <div class="nav-item" onclick="showPage('machines',this)"><span class="nav-icon">🏭</span> المعدات</div>
-      <div class="nav-item" onclick="showPage('electricity',this)"><span class="nav-icon">⚡</span> استهلاك الكهرباء</div>
-      <div class="nav-item" onclick="showPage('stoppages',this)"><span class="nav-icon">🛑</span> التوقفات</div>
-      <div class="nav-item" onclick="showPage('temperature',this)"><span class="nav-icon">🌡️</span> درجات الحرارة</div>
-      <div class="nav-item" onclick="showPage('reports',this)"><span class="nav-icon">📈</span> التقارير</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> <span data-ar="لوحة التحكم" data-en="Dashboard">لوحة التحكم</span></div>
+      <div class="nav-item" onclick="showPage('lines',this)"><span class="nav-icon">🏭</span> <span data-ar="خطوط الإنتاج" data-en="Production Lines">خطوط الإنتاج</span></div>
+      <div class="nav-item" onclick="showPage('resources',this)"><span class="nav-icon">⚡</span> <span data-ar="الموارد" data-en="Resources">الموارد</span></div>
+      <div class="nav-item" onclick="showPage('downtime',this)"><span class="nav-icon">🛑</span> <span data-ar="التوقفات" data-en="Downtime">التوقفات</span></div>
+      <div class="nav-item" onclick="showPage('reports',this)"><span class="nav-icon">📈</span> <span data-ar="التقارير" data-en="Reports">التقارير</span></div>
+      <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span> <span data-ar="الإعدادات" data-en="Settings">الإعدادات</span></div>
       <div class="nav-divider" id="admin-divider" style="display:none"></div>
-      <div class="nav-item admin-nav" id="admin-nav" style="display:none" onclick="showPage('admin',this)"><span class="nav-icon">👑</span> لوحة الأدمن</div>
+      <div class="nav-item admin-nav" id="admin-nav" style="display:none" onclick="showPage('admin',this)"><span class="nav-icon">👑</span> <span data-ar="لوحة الأدمن" data-en="Admin Panel">لوحة الأدمن</span></div>
     </div>
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar">👤</div>
-        <div class="user-name" id="user-name-display">المستخدم</div>
-        <button class="btn-logout" onclick="logout()">خروج</button>
+        <div class="user-name" id="user-name-display">--</div>
+        <button class="btn-logout" onclick="logout()" data-ar="خروج" data-en="Logout">خروج</button>
       </div>
     </div>
   </div>
@@ -312,249 +372,292 @@
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div class="page-header"><h1>📊 لوحة التحكم</h1><p id="today-date"></p></div>
+      <div class="page-header">
+        <div>
+          <h1>📊 <span data-ar="لوحة التحكم" data-en="Dashboard">لوحة التحكم</span></h1>
+          <p id="today-date"></p>
+        </div>
+      </div>
+      <!-- SHIFT BAR -->
+      <div class="shift-bar">
+        <span data-ar="الوردية الحالية:" data-en="Current Shift:">الوردية الحالية:</span>
+        <span class="shift-badge" id="current-shift-badge">--</span>
+        <span class="shift-time" id="current-shift-time"></span>
+        <span class="shift-clock" id="live-clock"></span>
+      </div>
       <div class="stats-grid">
         <div class="stat-card green"><span class="stat-icon">⚡</span>
-          <div class="stat-label">استهلاك الكهرباء اليوم</div>
-          <div class="stat-value green" id="stat-kwh">--</div><div class="stat-unit">كيلوواط/ساعة</div></div>
-        <div class="stat-card orange"><span class="stat-icon">⏱️</span>
-          <div class="stat-label">توقفات قصيرة اليوم</div>
-          <div class="stat-value orange" id="stat-short">--</div><div class="stat-unit">أقل من دقيقة</div></div>
-        <div class="stat-card red"><span class="stat-icon">🛑</span>
-          <div class="stat-label">توقفات طويلة اليوم</div>
-          <div class="stat-value red" id="stat-long">--</div><div class="stat-unit">أكثر من ساعة</div></div>
-        <div class="stat-card blue"><span class="stat-icon">🏭</span>
-          <div class="stat-label">المعدات النشطة</div>
-          <div class="stat-value blue" id="stat-machines">--</div><div class="stat-unit">من أصل <span id="stat-total">--</span></div></div>
+          <div class="stat-label" data-ar="استهلاك الكهرباء اليوم" data-en="Today Electricity">استهلاك الكهرباء اليوم</div>
+          <div class="stat-value green" id="stat-elec">--</div><div class="stat-unit">kWh</div></div>
+        <div class="stat-card blue"><span class="stat-icon">💧</span>
+          <div class="stat-label" data-ar="استهلاك الماء اليوم" data-en="Today Water">استهلاك الماء اليوم</div>
+          <div class="stat-value blue" id="stat-water">--</div><div class="stat-unit">m³</div></div>
+        <div class="stat-card orange"><span class="stat-icon">🛑</span>
+          <div class="stat-label" data-ar="توقفات اليوم" data-en="Today Downtime">توقفات اليوم</div>
+          <div class="stat-value orange" id="stat-stops">--</div><div class="stat-unit" data-ar="توقف" data-en="stops">توقف</div></div>
+        <div class="stat-card red"><span class="stat-icon">⏱️</span>
+          <div class="stat-label" data-ar="وقت التوقف (دقيقة)" data-en="Downtime (min)">وقت التوقف (دقيقة)</div>
+          <div class="stat-value red" id="stat-downtime">--</div><div class="stat-unit" data-ar="دقيقة" data-en="min">دقيقة</div></div>
+      </div>
+      <!-- OEE -->
+      <div class="oee-card">
+        <div class="card-title">📊 <span data-ar="كفاءة المعدات (OEE)" data-en="Overall Equipment Efficiency (OEE)">كفاءة المعدات (OEE)</span></div>
+        <div class="oee-grid" id="oee-display"><div class="loading">جاري التحميل...</div></div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">⚡ استهلاك الكهرباء - اليوم</div>
-          <div class="bar-chart" id="dash-elec-chart"><div class="loading">جاري التحميل...</div></div></div>
-        <div class="card"><div class="card-title">🛑 التوقفات حسب النوع</div>
-          <div class="bar-chart" id="dash-stop-chart"><div class="loading">جاري التحميل...</div></div></div>
-      </div>
-      <div class="card"><div class="card-title">🌡️ درجات حرارة الأقسام</div>
-        <div class="temp-gauges" id="dash-temp"><div class="loading">جاري التحميل...</div></div></div>
-    </div>
-
-    <!-- DEPARTMENTS -->
-    <div class="page" id="page-departments">
-      <div class="page-header"><h1>🏢 إدارة الأقسام</h1><p>حتى 5 أقسام</p></div>
-      <div class="card">
-        <div class="card-title">➕ إضافة قسم جديد</div>
-        <div class="success-msg" id="dept-success">✅ تمت إضافة القسم!</div>
-        <div class="form-row">
-          <div class="form-group2"><label>اسم القسم</label><input type="text" id="dept-name" placeholder="مثال: قسم التعبئة"></div>
-          <div class="form-group2"><label>الوصف (اختياري)</label><input type="text" id="dept-desc" placeholder="وصف القسم"></div>
-        </div>
-        <button class="btn-green" onclick="addDepartment()">🏢 إضافة القسم</button>
-      </div>
-      <div class="card"><div class="card-title">🏢 الأقسام الحالية</div>
-        <div class="dept-grid" id="dept-grid"><div class="loading">جاري التحميل...</div></div></div>
-    </div>
-
-    <!-- MACHINES -->
-    <div class="page" id="page-machines">
-      <div class="page-header"><h1>🏭 إدارة المعدات</h1><p>حتى 10 معدات لكل قسم</p></div>
-      <div class="card">
-        <div class="card-title">➕ إضافة معدة جديدة</div>
-        <div class="success-msg" id="mach-success">✅ تمت إضافة المعدة!</div>
-        <div class="form-row triple">
-          <div class="form-group2"><label>اسم المعدة</label><input type="text" id="mach-name" placeholder="مثال: ماكينة التغليف"></div>
-          <div class="form-group2"><label>كود المعدة</label><input type="text" id="mach-code" placeholder="مثال: M-001"></div>
-          <div class="form-group2"><label>القسم</label><select id="mach-dept"><option value="">اختر القسم</option></select></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group2"><label>الحالة</label>
-            <select id="mach-status">
-              <option value="running">✅ تشغيل</option><option value="idle">⏸️ وقف</option>
-              <option value="fault">❌ عطل</option><option value="maintenance">🔧 صيانة</option>
-            </select></div>
-          <div style="display:flex;align-items:flex-end"><button class="btn-green" onclick="addMachine()" style="width:100%">🏭 إضافة</button></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">📋 المعدات</div>
-        <div style="margin-bottom:16px">
-          <select id="filter-dept" onchange="loadMachines()" style="padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:Cairo,sans-serif;font-size:14px">
-            <option value="">جميع الأقسام</option></select></div>
-        <div class="machine-grid" id="mach-grid"><div class="loading">جاري التحميل...</div></div>
+        <div class="card"><div class="card-title">🛑 <span data-ar="التوقفات حسب السبب" data-en="Downtime by Reason">التوقفات حسب السبب</span></div>
+          <div class="bar-chart" id="dash-stop-chart"><div class="loading">...</div></div></div>
+        <div class="card"><div class="card-title">⚡ <span data-ar="الاستهلاك حسب الخط" data-en="Consumption by Line">الاستهلاك حسب الخط</span></div>
+          <div class="bar-chart" id="dash-elec-chart"><div class="loading">...</div></div></div>
       </div>
     </div>
 
-    <!-- ELECTRICITY -->
-    <div class="page" id="page-electricity">
-      <div class="page-header"><h1>⚡ استهلاك الكهرباء</h1><p>إدخال سريع لجميع المعدات</p></div>
+    <!-- PRODUCTION LINES -->
+    <div class="page" id="page-lines">
+      <div class="page-header">
+        <div><h1>🏭 <span data-ar="خطوط الإنتاج" data-en="Production Lines">خطوط الإنتاج</span></h1>
+          <p data-ar="إدارة خطوط الإنتاج والموارد" data-en="Manage production lines and resources">إدارة خطوط الإنتاج والموارد</p></div>
+        <button class="btn-green" onclick="openModal('add-line-modal')" data-ar="➕ إضافة خط" data-en="➕ Add Line">➕ إضافة خط</button>
+      </div>
+      <div class="lines-grid" id="lines-grid"><div class="loading">جاري التحميل...</div></div>
+      <!-- LINE DETAIL -->
+      <div id="line-detail" style="display:none">
+        <div class="card">
+          <div class="card-title" id="line-detail-title">تفاصيل الخط</div>
+          <div id="line-resources-list"></div>
+          <button class="btn-blue" onclick="openAddResourceModal()" style="margin-top:10px" data-ar="➕ إضافة مورد" data-en="➕ Add Resource">➕ إضافة مورد</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESOURCES -->
+    <div class="page" id="page-resources">
+      <div class="page-header">
+        <div><h1>⚡ <span data-ar="تسجيل الموارد" data-en="Resource Entry">تسجيل الموارد</span></h1>
+          <p data-ar="إدخال قراءات الكهرباء والماء والبترول" data-en="Enter electricity, water and oil readings">إدخال قراءات الكهرباء والماء والبترول</p></div>
+      </div>
       <div class="card">
-        <div class="card-title">⚡ إدخال سريع - حفظ الكل دفعة واحدة</div>
-        <div class="success-msg" id="quick-success">✅ تم حفظ استهلاك جميع المعدات!</div>
-        <div class="date-bar">
-          <label>📅 التاريخ:</label>
-          <input type="date" id="quick-date">
-          <button class="btn-blue" onclick="loadQuickTable()">🔄 تحديث</button>
+        <div class="card-title">⚡ <span data-ar="إدخال سريع - جميع الخطوط" data-en="Quick Entry - All Lines">إدخال سريع - جميع الخطوط</span></div>
+        <div class="success-msg" id="res-success">✅ <span data-ar="تم الحفظ بنجاح!" data-en="Saved successfully!">تم الحفظ بنجاح!</span></div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <div class="form-group2" style="flex:1;min-width:150px">
+            <label data-ar="التاريخ" data-en="Date">التاريخ</label>
+            <input type="date" id="res-date">
+          </div>
+          <div class="form-group2" style="flex:1;min-width:150px">
+            <label data-ar="الوردية" data-en="Shift">الوردية</label>
+            <select id="res-shift">
+              <option value="B">B - <span data-ar="صباحية" data-en="Morning">صباحية</span> (8ص-4م)</option>
+              <option value="C">C - <span data-ar="مسائية" data-en="Evening">مسائية</span> (5م-12م)</option>
+              <option value="A">A - <span data-ar="ليلية" data-en="Night">ليلية</span> (1ص-8ص)</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn-blue" onclick="loadResourceTable()" data-ar="🔄 تحديث" data-en="🔄 Refresh">🔄 تحديث</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table class="quick-table">
-            <thead><tr><th>#</th><th>المعدة</th><th>القسم</th><th style="text-align:center">الاستهلاك (kWh)</th><th style="text-align:center">آخر قيمة</th></tr></thead>
-            <tbody id="quick-table-body"><tr><td colspan="5" class="loading">جاري تحميل المعدات...</td></tr></tbody>
+            <thead id="res-table-head"></thead>
+            <tbody id="res-table-body"><tr><td colspan="5" class="loading">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
-        <button class="save-all-btn" onclick="saveAllElectricity()">💾 حفظ الكل</button>
+        <button class="save-all-btn" onclick="saveAllResources()" data-ar="💾 حفظ الكل" data-en="💾 Save All">💾 حفظ الكل</button>
       </div>
-      <div class="card"><div class="card-title">📋 سجل الاستهلاك</div>
-        <div style="display:flex;gap:10px;margin-bottom:14px">
-          <select id="hist-dept-filter" onchange="loadElectricity()" style="padding:9px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:Cairo,sans-serif;font-size:13px">
-            <option value="">جميع الأقسام</option></select>
-          <input type="date" id="hist-date-filter" onchange="loadElectricity()" style="padding:9px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:Cairo,sans-serif;font-size:13px">
-        </div>
+      <div class="card"><div class="card-title">📋 <span data-ar="سجل القراءات" data-en="Readings History">سجل القراءات</span></div>
         <div class="table-wrap"><table>
-          <thead><tr><th>التاريخ</th><th>القسم</th><th>المعدة</th><th>الاستهلاك</th><th>حذف</th></tr></thead>
-          <tbody id="elec-table"><tr><td colspan="5" class="loading">جاري التحميل...</td></tr></tbody>
+          <thead><tr>
+            <th data-ar="التاريخ" data-en="Date">التاريخ</th>
+            <th data-ar="الوردية" data-en="Shift">الوردية</th>
+            <th data-ar="الخط" data-en="Line">الخط</th>
+            <th data-ar="المورد" data-en="Resource">المورد</th>
+            <th data-ar="القيمة" data-en="Value">القيمة</th>
+            <th data-ar="حذف" data-en="Delete">حذف</th>
+          </tr></thead>
+          <tbody id="res-history"><tr><td colspan="6" class="loading">جاري التحميل...</td></tr></tbody>
         </table></div></div>
     </div>
 
-    <!-- STOPPAGES -->
-    <div class="page" id="page-stoppages">
-      <div class="page-header"><h1>🛑 التوقفات</h1></div>
+    <!-- DOWNTIME -->
+    <div class="page" id="page-downtime">
+      <div class="page-header">
+        <div><h1>🛑 <span data-ar="التوقفات" data-en="Downtime">التوقفات</span></h1>
+          <p data-ar="تسجيل ومتابعة توقفات خطوط الإنتاج" data-en="Record and track production line downtime">تسجيل ومتابعة توقفات خطوط الإنتاج</p></div>
+      </div>
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">➕ تسجيل توقف جديد</div>
-          <div class="success-msg" id="stop-success">✅ تم تسجيل التوقف!</div>
+          <div class="card-title">➕ <span data-ar="تسجيل توقف جديد" data-en="New Downtime Record">تسجيل توقف جديد</span></div>
+          <div class="success-msg" id="dt-success">✅ <span data-ar="تم التسجيل!" data-en="Recorded!">تم التسجيل!</span></div>
           <div class="form-row">
-            <div class="form-group2"><label>القسم</label>
-              <select id="stop-dept" onchange="loadMachinesByDept('stop-machine','stop-dept')"><option value="">اختر القسم</option></select></div>
-            <div class="form-group2"><label>المعدة</label>
-              <select id="stop-machine"><option value="">اختر المعدة</option></select></div>
+            <div class="form-group2">
+              <label data-ar="خط الإنتاج" data-en="Production Line">خط الإنتاج</label>
+              <select id="dt-line"><option value="">اختر الخط</option></select>
+            </div>
+            <div class="form-group2">
+              <label data-ar="الوردية" data-en="Shift">الوردية</label>
+              <select id="dt-shift">
+                <option value="B">B - صباحية (8ص-4م)</option>
+                <option value="C">C - مسائية (5م-12م)</option>
+                <option value="A">A - ليلية (1ص-8ص)</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
-            <div class="form-group2"><label>نوع التوقف</label>
-              <select id="stop-type">
+            <div class="form-group2">
+              <label data-ar="نوع التوقف" data-en="Downtime Type">نوع التوقف</label>
+              <select id="dt-type">
                 <option value="">اختر النوع</option>
                 <option value="short">⏱️ قصير (أقل من دقيقة)</option>
                 <option value="long">🛑 طويل (أكثر من ساعة)</option>
-              </select></div>
-            <div class="form-group2"><label>المدة (بالدقائق)</label>
-              <input type="number" id="stop-duration" placeholder="0" min="0" step="0.1"></div>
+              </select>
+            </div>
+            <div class="form-group2">
+              <label data-ar="المدة (دقائق)" data-en="Duration (min)">المدة (دقائق)</label>
+              <input type="number" id="dt-duration" placeholder="0" min="0" step="0.1">
+            </div>
           </div>
-          <div class="form-row single">
-            <div class="form-group2"><label>سبب التوقف</label>
-              <select id="stop-reason">
-                <option value="">اختر السبب</option>
-                <option value="electrical">⚡ كهرباء</option>
-                <option value="mechanical">🔧 ميكانيكا</option>
-                <option value="spare_parts">🔩 قطع غيار</option>
-                <option value="raw_materials">📦 مواد خام</option>
-                <option value="quality_defect">❌ عيب جودة</option>
-                <option value="other">📝 أخرى</option>
-              </select></div>
-          </div>
-          <div class="form-row single">
-            <div class="form-group2"><label>ملاحظات</label>
-              <textarea id="stop-notes" rows="2" placeholder="تفاصيل..." style="padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:Cairo,sans-serif;font-size:14px;outline:none;resize:vertical"></textarea></div>
-          </div>
-          <button class="btn-green" onclick="addStoppage()">🛑 تسجيل التوقف</button>
-        </div>
-        <div class="card"><div class="card-title">📊 التوقفات حسب السبب</div>
-          <div class="bar-chart" id="stop-summary"><div class="loading">جاري التحميل...</div></div></div>
-      </div>
-      <div class="card"><div class="card-title">📋 سجل التوقفات</div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>التاريخ</th><th>القسم</th><th>المعدة</th><th>النوع</th><th>المدة</th><th>السبب</th><th>ملاحظات</th><th>حذف</th></tr></thead>
-          <tbody id="stop-table"><tr><td colspan="8" class="loading">جاري التحميل...</td></tr></tbody>
-        </table></div></div>
-    </div>
-
-    <!-- TEMPERATURE -->
-    <div class="page" id="page-temperature">
-      <div class="page-header"><h1>🌡️ درجات الحرارة</h1></div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">➕ تسجيل درجة حرارة</div>
-          <div class="success-msg" id="temp-success">✅ تم التسجيل!</div>
           <div class="form-row">
-            <div class="form-group2"><label>القسم</label><select id="temp-dept"><option value="">اختر القسم</option></select></div>
-            <div class="form-group2"><label>درجة الحرارة (°C)</label><input type="number" id="temp-value" placeholder="25" step="0.1"></div>
+            <div class="form-group2">
+              <label data-ar="سبب التوقف" data-en="Reason">سبب التوقف</label>
+              <select id="dt-reason">
+                <option value="">اختر السبب</option>
+                <option value="electrical">⚡ عطل كهرباء</option>
+                <option value="mechanical">🔧 عطل ميكانيكا</option>
+                <option value="operational">🔄 تشغيل (مخطط)</option>
+                <option value="raw_materials">📦 مواد خام</option>
+                <option value="quality">❌ جودة</option>
+                <option value="other">📝 أخرى</option>
+              </select>
+            </div>
+            <div class="form-group2">
+              <label data-ar="التاريخ" data-en="Date">التاريخ</label>
+              <input type="date" id="dt-date">
+            </div>
           </div>
-          <button class="btn-green" onclick="addTemperature()">🌡️ تسجيل</button>
+          <div class="form-row single">
+            <div class="form-group2">
+              <label data-ar="تفاصيل إضافية" data-en="Details">تفاصيل إضافية</label>
+              <textarea id="dt-detail" rows="2" style="padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:Cairo,sans-serif;font-size:14px;outline:none;resize:vertical" placeholder="..."></textarea>
+            </div>
+          </div>
+          <button class="btn-green" onclick="addDowntime()" data-ar="🛑 تسجيل التوقف" data-en="🛑 Record Downtime">🛑 تسجيل التوقف</button>
         </div>
-        <div class="card"><div class="card-title">🌡️ آخر قراءات</div>
-          <div class="temp-gauges" id="temp-latest" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
-            <div class="loading">جاري التحميل...</div></div></div>
+        <div class="card"><div class="card-title">📊 <span data-ar="التوقفات حسب السبب" data-en="By Reason">التوقفات حسب السبب</span></div>
+          <div class="bar-chart" id="dt-chart"><div class="loading">...</div></div></div>
       </div>
-      <div class="card"><div class="card-title">📋 سجل درجات الحرارة</div>
+      <div class="card"><div class="card-title">📋 <span data-ar="سجل التوقفات" data-en="Downtime Log">سجل التوقفات</span></div>
         <div class="table-wrap"><table>
-          <thead><tr><th>التاريخ والوقت</th><th>القسم</th><th>درجة الحرارة</th><th>الحالة</th><th>حذف</th></tr></thead>
-          <tbody id="temp-table"><tr><td colspan="5" class="loading">جاري التحميل...</td></tr></tbody>
+          <thead><tr>
+            <th data-ar="التاريخ" data-en="Date">التاريخ</th>
+            <th data-ar="الوردية" data-en="Shift">الوردية</th>
+            <th data-ar="الخط" data-en="Line">الخط</th>
+            <th data-ar="النوع" data-en="Type">النوع</th>
+            <th data-ar="المدة" data-en="Duration">المدة</th>
+            <th data-ar="السبب" data-en="Reason">السبب</th>
+            <th data-ar="تفاصيل" data-en="Details">تفاصيل</th>
+            <th data-ar="حذف" data-en="Delete">حذف</th>
+          </tr></thead>
+          <tbody id="dt-table"><tr><td colspan="8" class="loading">جاري التحميل...</td></tr></tbody>
         </table></div></div>
     </div>
 
     <!-- REPORTS -->
     <div class="page" id="page-reports">
-      <div class="page-header"><h1>📈 التقارير</h1></div>
-      <div class="grid-3">
+      <div class="page-header">
+        <div><h1>📈 <span data-ar="التقارير" data-en="Reports">التقارير</span></h1></div>
+      </div>
+      <div class="stats-grid">
         <div class="stat-card green"><span class="stat-icon">⚡</span>
-          <div class="stat-label">استهلاك الكهرباء (هذا الشهر)</div>
-          <div class="stat-value green" id="rep-kwh">--</div><div class="stat-unit">kWh</div></div>
-        <div class="stat-card orange"><span class="stat-icon">⏱️</span>
-          <div class="stat-label">التوقفات القصيرة</div>
-          <div class="stat-value orange" id="rep-short">--</div><div class="stat-unit">توقف</div></div>
-        <div class="stat-card red"><span class="stat-icon">🛑</span>
-          <div class="stat-label">التوقفات الطويلة</div>
-          <div class="stat-value red" id="rep-long">--</div><div class="stat-unit">توقف</div></div>
+          <div class="stat-label" data-ar="كهرباء هذا الشهر" data-en="This Month Electricity">كهرباء هذا الشهر</div>
+          <div class="stat-value green" id="rep-elec">--</div><div class="stat-unit">kWh</div></div>
+        <div class="stat-card blue"><span class="stat-icon">💧</span>
+          <div class="stat-label" data-ar="ماء هذا الشهر" data-en="This Month Water">ماء هذا الشهر</div>
+          <div class="stat-value blue" id="rep-water">--</div><div class="stat-unit">m³</div></div>
+        <div class="stat-card orange"><span class="stat-icon">🛑</span>
+          <div class="stat-label" data-ar="توقفات هذا الشهر" data-en="This Month Downtime">توقفات هذا الشهر</div>
+          <div class="stat-value orange" id="rep-stops">--</div><div class="stat-unit" data-ar="توقف" data-en="stops">توقف</div></div>
+        <div class="stat-card purple"><span class="stat-icon">📊</span>
+          <div class="stat-label" data-ar="متوسط OEE" data-en="Average OEE">متوسط OEE</div>
+          <div class="stat-value purple" id="rep-oee">--</div><div class="stat-unit">%</div></div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">⚡ الاستهلاك - آخر 7 أيام</div>
-          <div class="bar-chart" id="rep-elec-chart"><div class="loading">جاري التحميل...</div></div></div>
-        <div class="card"><div class="card-title">🛑 أسباب التوقف - هذا الشهر</div>
-          <div class="bar-chart" id="rep-stop-chart"><div class="loading">جاري التحميل...</div></div></div>
+        <div class="card"><div class="card-title">⚡ <span data-ar="الاستهلاك - آخر 7 أيام" data-en="Consumption - Last 7 Days">الاستهلاك - آخر 7 أيام</span></div>
+          <div class="bar-chart" id="rep-elec-chart"><div class="loading">...</div></div></div>
+        <div class="card"><div class="card-title">🛑 <span data-ar="أسباب التوقف" data-en="Downtime Reasons">أسباب التوقف</span></div>
+          <div class="bar-chart" id="rep-stop-chart"><div class="loading">...</div></div></div>
+      </div>
+      <div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:18px;font-weight:700;margin-bottom:16px">📤 <span data-ar="تصدير البيانات" data-en="Export Data">تصدير البيانات</span></div>
+        <button class="btn-green" onclick="exportExcel()" style="margin:8px" data-ar="📊 تصدير Excel" data-en="📊 Export Excel">📊 تصدير Excel</button>
       </div>
     </div>
 
-    <!-- ADMIN PAGE -->
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><h1>⚙️ <span data-ar="الإعدادات" data-en="Settings">الإعدادات</span></h1></div>
+      </div>
+      <div class="settings-section">
+        <h3>👤 <span data-ar="معلومات الحساب" data-en="Account Info">معلومات الحساب</span></h3>
+        <div class="form-row">
+          <div class="form-group2">
+            <label data-ar="الاسم الكامل" data-en="Full Name">الاسم الكامل</label>
+            <input type="text" id="set-name">
+          </div>
+          <div class="form-group2">
+            <label data-ar="رقم الجوال" data-en="Phone">رقم الجوال</label>
+            <input type="text" id="set-phone">
+          </div>
+        </div>
+        <button class="btn-green" onclick="saveProfile()" data-ar="💾 حفظ المعلومات" data-en="💾 Save Info">💾 حفظ المعلومات</button>
+      </div>
+      <div class="settings-section">
+        <h3>🔒 <span data-ar="تغيير كلمة المرور" data-en="Change Password">تغيير كلمة المرور</span></h3>
+        <div class="form-row">
+          <div class="form-group2">
+            <label data-ar="كلمة المرور الجديدة" data-en="New Password">كلمة المرور الجديدة</label>
+            <input type="password" id="set-newpass" placeholder="••••••••">
+          </div>
+          <div class="form-group2">
+            <label data-ar="تأكيد كلمة المرور" data-en="Confirm Password">تأكيد كلمة المرور</label>
+            <input type="password" id="set-confirmpass" placeholder="••••••••">
+          </div>
+        </div>
+        <button class="btn-green" onclick="changePassword()" data-ar="🔒 تغيير كلمة المرور" data-en="🔒 Change Password">🔒 تغيير كلمة المرور</button>
+        <div class="success-msg" id="set-success" style="margin-top:12px">✅ <span data-ar="تم الحفظ!" data-en="Saved!">تم الحفظ!</span></div>
+      </div>
+      <div class="settings-section">
+        <h3>🌐 <span data-ar="اللغة" data-en="Language">اللغة</span></h3>
+        <div style="display:flex;gap:10px">
+          <button class="btn-green" onclick="setLang('ar')" data-ar="🇸🇦 العربية" data-en="🇸🇦 Arabic">🇸🇦 العربية</button>
+          <button class="btn-blue" onclick="setLang('en')" data-ar="🇬🇧 الإنجليزية" data-en="🇬🇧 English">🇬🇧 الإنجليزية</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
     <div class="page" id="page-admin">
-      <div class="page-header"><h1>👑 لوحة الأدمن</h1><p>إدارة كاملة للنظام</p></div>
-      <div class="admin-banner">
-        <span style="font-size:32px">👑</span>
-        <div>
-          <div style="font-size:18px;font-weight:700;color:var(--purple)">مرحباً بك يا مدير النظام!</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:4px">لديك صلاحية الوصول الكامل لجميع البيانات</div>
-        </div>
-        <div class="admin-badge">👑 Admin</div>
+      <div class="page-header">
+        <div><h1>👑 <span data-ar="لوحة الأدمن" data-en="Admin Panel">لوحة الأدمن</span></h1></div>
+        <a href="admin.html" class="btn-blue" target="_blank" data-ar="🔗 فتح صفحة الأدمن الكاملة" data-en="🔗 Open Full Admin Page">🔗 فتح صفحة الأدمن الكاملة</a>
       </div>
-
-      <!-- ADMIN STATS -->
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
-        <div class="stat-card purple"><span class="stat-icon">👥</span>
-          <div class="stat-label">إجمالي المستخدمين</div>
-          <div class="stat-value purple" id="admin-stat-users">--</div><div class="stat-unit">مستخدم مسجل</div></div>
-        <div class="stat-card green"><span class="stat-icon">⚡</span>
-          <div class="stat-label">إجمالي سجلات الكهرباء</div>
-          <div class="stat-value green" id="admin-stat-elec">--</div><div class="stat-unit">سجل</div></div>
-        <div class="stat-card red"><span class="stat-icon">🛑</span>
-          <div class="stat-label">إجمالي التوقفات</div>
-          <div class="stat-value red" id="admin-stat-stops">--</div><div class="stat-unit">توقف</div></div>
-        <div class="stat-card blue"><span class="stat-icon">🌡️</span>
-          <div class="stat-label">قراءات الحرارة</div>
-          <div class="stat-value blue" id="admin-stat-temps">--</div><div class="stat-unit">قراءة</div></div>
+      <div class="stats-grid">
+        <div class="stat-card purple"><span class="stat-icon">🏢</span>
+          <div class="stat-label" data-ar="إجمالي الشركات" data-en="Total Companies">إجمالي الشركات</div>
+          <div class="stat-value purple" id="adm-companies">--</div></div>
+        <div class="stat-card blue"><span class="stat-icon">👥</span>
+          <div class="stat-label" data-ar="إجمالي المستخدمين" data-en="Total Users">إجمالي المستخدمين</div>
+          <div class="stat-value blue" id="adm-users">--</div></div>
+        <div class="stat-card green"><span class="stat-icon">🏭</span>
+          <div class="stat-label" data-ar="خطوط الإنتاج" data-en="Production Lines">خطوط الإنتاج</div>
+          <div class="stat-value green" id="adm-lines">--</div></div>
+        <div class="stat-card orange"><span class="stat-icon">🛑</span>
+          <div class="stat-label" data-ar="إجمالي التوقفات" data-en="Total Downtimes">إجمالي التوقفات</div>
+          <div class="stat-value orange" id="adm-stops">--</div></div>
       </div>
-
-      <!-- USERS LIST -->
       <div class="card">
-        <div class="card-title">👥 المستخدمون المسجلون</div>
-        <div id="admin-users-list"><div class="loading">جاري تحميل المستخدمين...</div></div>
-      </div>
-
-      <!-- ACTIVITY LOG -->
-      <div class="card">
-        <div class="card-title">📋 سجل جميع العمليات</div>
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterLog('all',this)">الكل</button>
-          <button class="filter-btn" onclick="filterLog('elec',this)">⚡ الكهرباء</button>
-          <button class="filter-btn" onclick="filterLog('stop',this)">🛑 التوقفات</button>
-          <button class="filter-btn" onclick="filterLog('temp',this)">🌡️ الحرارة</button>
-          <button class="filter-btn" onclick="filterLog('mach',this)">🏭 المعدات</button>
-        </div>
-        <div id="admin-log"><div class="loading">جاري التحميل...</div></div>
+        <div class="card-title">🏢 <span data-ar="الشركات المسجلة" data-en="Registered Companies">الشركات المسجلة</span></div>
+        <div id="adm-companies-list"><div class="loading">جاري التحميل...</div></div>
       </div>
     </div>
 
@@ -562,30 +665,69 @@
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="edit-dept-modal">
-  <div class="modal"><h3>✏️ تعديل القسم</h3>
-    <input type="hidden" id="edit-dept-id">
-    <div class="form-group2" style="margin-bottom:14px"><label>اسم القسم</label><input type="text" id="edit-dept-name"></div>
-    <div class="form-group2"><label>الوصف</label><input type="text" id="edit-dept-desc"></div>
+<div class="modal-overlay" id="add-line-modal">
+  <div class="modal">
+    <h3>🏭 <span data-ar="إضافة خط إنتاج جديد" data-en="Add Production Line">إضافة خط إنتاج جديد</span></h3>
+    <div class="form-row">
+      <div class="form-group2">
+        <label data-ar="اسم الخط (عربي)" data-en="Line Name (Arabic)">اسم الخط (عربي)</label>
+        <input type="text" id="line-name-ar" placeholder="خط التعبئة 1">
+      </div>
+      <div class="form-group2">
+        <label data-ar="اسم الخط (إنجليزي)" data-en="Line Name (English)">اسم الخط (إنجليزي)</label>
+        <input type="text" id="line-name-en" placeholder="Filling Line 1">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group2">
+        <label data-ar="الطاقة الإنتاجية (وحدة/ساعة)" data-en="Capacity (unit/hour)">الطاقة الإنتاجية (وحدة/ساعة)</label>
+        <input type="number" id="line-capacity" placeholder="100" min="0">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:var(--text2);font-weight:600;display:block;margin-bottom:10px" data-ar="الموارد المطلوبة:" data-en="Required Resources:">الموارد المطلوبة:</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="res-elec" value="electricity" checked style="width:16px;height:16px">
+          ⚡ <span data-ar="كهرباء" data-en="Electricity">كهرباء</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="res-water" value="water" style="width:16px;height:16px">
+          💧 <span data-ar="ماء" data-en="Water">ماء</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="res-oil" value="oil" style="width:16px;height:16px">
+          🛢️ <span data-ar="بترول" data-en="Oil">بترول</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="res-gas" value="gas" style="width:16px;height:16px">
+          🔥 <span data-ar="غاز" data-en="Gas">غاز</span>
+        </label>
+      </div>
+    </div>
     <div class="modal-actions">
-      <button class="btn-red" onclick="closeModal('edit-dept-modal')">إلغاء</button>
-      <button class="btn-green" onclick="saveDept()">حفظ</button>
-    </div></div>
+      <button class="btn-red" onclick="closeModal('add-line-modal')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+      <button class="btn-green" onclick="addLine()" data-ar="إضافة الخط" data-en="Add Line">إضافة الخط</button>
+    </div>
+  </div>
 </div>
-<div class="modal-overlay" id="edit-mach-modal">
-  <div class="modal"><h3>✏️ تعديل المعدة</h3>
-    <input type="hidden" id="edit-mach-id">
-    <div class="form-group2" style="margin-bottom:14px"><label>اسم المعدة</label><input type="text" id="edit-mach-name"></div>
-    <div class="form-group2" style="margin-bottom:14px"><label>كود المعدة</label><input type="text" id="edit-mach-code"></div>
-    <div class="form-group2"><label>الحالة</label>
-      <select id="edit-mach-status">
-        <option value="running">✅ تشغيل</option><option value="idle">⏸️ وقف</option>
-        <option value="fault">❌ عطل</option><option value="maintenance">🔧 صيانة</option>
-      </select></div>
+
+<div class="modal-overlay" id="forgot-modal">
+  <div class="modal">
+    <h3>🔑 <span data-ar="نسيت كلمة المرور؟" data-en="Forgot Password?">نسيت كلمة المرور؟</span></h3>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:20px" data-ar="تواصل مع مدير النظام على:" data-en="Contact system admin at:">تواصل مع مدير النظام على:</p>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+      <div style="font-size:20px;margin-bottom:8px">📧</div>
+      <div style="font-size:16px;font-weight:700;color:var(--blue)">energygtech@gmail.com</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px" data-ar="أرسل اسمك واسم شركتك وسيتم إرسال كلمة مرور جديدة لك" data-en="Send your name and company name and a new password will be sent to you">أرسل اسمك واسم شركتك وسيتم إرسال كلمة مرور جديدة لك</div>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <a href="https://wa.me/966500000000" target="_blank" class="btn-green" style="display:inline-block;text-decoration:none;margin:4px">💬 واتساب</a>
+    </div>
     <div class="modal-actions">
-      <button class="btn-red" onclick="closeModal('edit-mach-modal')">إلغاء</button>
-      <button class="btn-green" onclick="saveMachine()">حفظ</button>
-    </div></div>
+      <button class="btn-blue" onclick="closeModal('forgot-modal')" data-ar="إغلاق" data-en="Close">إغلاق</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -594,9 +736,44 @@ const SUPABASE_KEY='sb_publishable_RGEhCibDHoVg3rY_v3aBHw_YqKmKte3';
 const ADMIN_EMAIL='energygtech@gmail.com';
 const {createClient}=supabase;
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
-let currentUser=null,departments=[],isAdmin=false,allLogs=[];
 
-// AUTH
+let currentUser=null,currentCompany=null,currentLang='ar',isAdmin=false;
+let productionLines=[],lineResources=[];
+
+// ===== LANGUAGE =====
+function setLang(lang){
+  currentLang=lang;
+  localStorage.setItem('lang',lang);
+  document.getElementById('html-root').setAttribute('lang',lang);
+  document.getElementById('html-root').setAttribute('dir',lang==='ar'?'rtl':'ltr');
+  document.querySelectorAll('[data-'+lang+']').forEach(el=>{
+    el.textContent=el.getAttribute('data-'+lang);
+  });
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>{
+    b.classList.toggle('active',(i===0&&lang==='ar')||(i===1&&lang==='en'));
+  });
+}
+
+// ===== SHIFTS =====
+function getCurrentShift(){
+  const h=new Date().getHours();
+  if(h>=8&&h<17)return{shift:'B',name:currentLang==='ar'?'وردية B - صباحية':'Shift B - Morning',time:'8:00 AM - 4:00 PM'};
+  if(h>=17||h<1)return{shift:'C',name:currentLang==='ar'?'وردية C - مسائية':'Shift C - Evening',time:'5:00 PM - 12:00 AM'};
+  return{shift:'A',name:currentLang==='ar'?'وردية A - ليلية':'Shift A - Night',time:'1:00 AM - 8:00 AM'};
+}
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('live-clock').textContent=now.toLocaleTimeString(currentLang==='ar'?'ar-SA':'en-US');
+  const s=getCurrentShift();
+  const badge=document.getElementById('current-shift-badge');
+  if(badge){badge.textContent=s.name;badge.className='shift-badge '+s.shift;}
+  const st=document.getElementById('current-shift-time');
+  if(st)st.textContent=s.time;
+}
+setInterval(updateClock,1000);
+
+// ===== AUTH =====
 function switchTab(tab){
   document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
   document.getElementById('login-form').style.display=tab==='login'?'block':'none';
@@ -604,388 +781,478 @@ function switchTab(tab){
   document.getElementById('auth-msg').className='auth-msg';
 }
 function showMsg(msg,type){const el=document.getElementById('auth-msg');el.textContent=msg;el.className='auth-msg '+type;}
+function showForgot(){document.getElementById('forgot-modal').classList.add('show');}
 
 async function login(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
-  if(!email||!pass){showMsg('يرجى ملء جميع الحقول','error');return;}
+  if(!email||!pass){showMsg(currentLang==='ar'?'يرجى ملء جميع الحقول':'Please fill all fields','error');return;}
   const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){showMsg('خطأ في البيانات','error');return;}
+  if(error){showMsg(currentLang==='ar'?'خطأ في البيانات':'Invalid credentials','error');return;}
   startApp(data.user);
 }
 
 async function register(){
   const name=document.getElementById('reg-name').value.trim();
+  const company=document.getElementById('reg-company').value.trim();
   const phone=document.getElementById('reg-phone').value.trim();
   const email=document.getElementById('reg-email').value.trim();
   const pass=document.getElementById('reg-pass').value;
-  if(!name||!phone||!email||!pass){showMsg('يرجى ملء جميع الحقول','error');return;}
-  if(pass.length<8){showMsg('كلمة المرور 8 أحرف على الأقل','error');return;}
+  if(!name||!company||!phone||!email||!pass){showMsg(currentLang==='ar'?'يرجى ملء جميع الحقول':'Please fill all fields','error');return;}
+  if(pass.length<8){showMsg(currentLang==='ar'?'كلمة المرور 8 أحرف على الأقل':'Password must be at least 8 characters','error');return;}
   const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name,phone}}});
   if(error){showMsg('خطأ: '+error.message,'error');return;}
   if(data.user){
-    await sb.from('user_profiles').upsert({id:data.user.id,full_name:name,phone,role:'user'});
-    showMsg('✅ تم الإنشاء! ادخل الآن','success');
+    // Create company
+    const {data:comp}=await sb.from('companies').insert({name:company}).select().single();
+    await sb.from('user_profiles').upsert({id:data.user.id,full_name:name,phone,email,role:'user',company_id:comp?.id,language:currentLang});
+    showMsg(currentLang==='ar'?'✅ تم إنشاء الحساب! ادخل الآن':'✅ Account created! Login now','success');
     setTimeout(()=>switchTab('login'),1500);
   }
 }
 
-async function logout(){await sb.auth.signOut();document.getElementById('app-screen').style.display='none';document.getElementById('auth-screen').style.display='flex';isAdmin=false;}
+async function logout(){
+  await sb.auth.signOut();
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  currentUser=null;currentCompany=null;isAdmin=false;
+}
+
+async function changePassword(){
+  const np=document.getElementById('set-newpass').value;
+  const cp=document.getElementById('set-confirmpass').value;
+  if(!np||!cp){alert(currentLang==='ar'?'أدخل كلمة المرور الجديدة':'Enter new password');return;}
+  if(np!==cp){alert(currentLang==='ar'?'كلمتا المرور غير متطابقتين':'Passwords do not match');return;}
+  if(np.length<8){alert(currentLang==='ar'?'8 أحرف على الأقل':'At least 8 characters');return;}
+  const {error}=await sb.auth.updateUser({password:np});
+  if(error){alert('خطأ: '+error.message);return;}
+  document.getElementById('set-newpass').value='';
+  document.getElementById('set-confirmpass').value='';
+  showSuccess('set-success');
+}
+
+async function saveProfile(){
+  const name=document.getElementById('set-name').value.trim();
+  const phone=document.getElementById('set-phone').value.trim();
+  await sb.from('user_profiles').update({full_name:name,phone}).eq('id',currentUser.id);
+  document.getElementById('user-name-display').textContent=name;
+  showSuccess('set-success');
+}
 
 async function startApp(user){
   currentUser=user;
   isAdmin=(user.email===ADMIN_EMAIL);
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-  // Show admin nav if admin
+  const {data:profile}=await sb.from('user_profiles').select('*').eq('id',user.id).single();
+  if(profile){
+    document.getElementById('user-name-display').textContent=profile.full_name||user.email;
+    document.getElementById('set-name').value=profile.full_name||'';
+    document.getElementById('set-phone').value=profile.phone||'';
+    if(profile.language)setLang(profile.language);
+    if(profile.company_id){
+      const {data:comp}=await sb.from('companies').select('*').eq('id',profile.company_id).single();
+      currentCompany=comp;
+      document.getElementById('company-name-display').textContent=comp?.name||'--';
+    }
+  }
   if(isAdmin){
     document.getElementById('admin-nav').style.display='flex';
     document.getElementById('admin-divider').style.display='block';
+    document.getElementById('company-name-display').textContent='👑 Admin';
   }
-  const {data:p}=await sb.from('user_profiles').select('full_name').eq('id',user.id).single();
-  document.getElementById('user-name-display').textContent=(isAdmin?'👑 ':(p?.full_name||user.email));
-  document.getElementById('today-date').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('quick-date').value=new Date().toISOString().split('T')[0];
-  await loadAllDepts();
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('res-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('dt-date').value=new Date().toISOString().split('T')[0];
+  // Set current shift
+  const s=getCurrentShift();
+  document.getElementById('res-shift').value=s.shift;
+  document.getElementById('dt-shift').value=s.shift;
+  await loadLines();
   loadDashboard();
-  loadQuickTable();
 }
 sb.auth.getSession().then(({data:{session}})=>{if(session)startApp(session.user);});
 
-// NAV
+// ===== NAV =====
 function showPage(name,el){
-  // Check admin access
-  if(name==='admin'&&!isAdmin){alert('⛔ هذه الصفحة للأدمن فقط!');return;}
+  if(name==='admin'&&!isAdmin){alert('⛔ للأدمن فقط');return;}
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
   closeSidebar();
   const loaders={
-    dashboard:loadDashboard,departments:loadDepts,machines:loadMachines,
-    electricity:()=>{loadQuickTable();loadElectricity();},
-    stoppages:()=>{loadStoppages();loadStopSummary();},
-    temperature:()=>{loadTemperature();loadTempLatest();},
-    reports:loadReports,
-    admin:loadAdminPage
+    dashboard:loadDashboard,lines:loadLinesPage,
+    resources:()=>{loadResourceTable();loadResHistory();},
+    downtime:()=>{loadDowntimes();loadDtChart();},
+    reports:loadReports,settings:()=>{},admin:loadAdminPage
   };
   if(loaders[name])loaders[name]();
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function showSuccess(id){const el=document.getElementById(id);el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
 
-// DEPTS
-async function loadAllDepts(){
-  const {data}=await sb.from('departments').select('*').order('created_at');
-  departments=data||[];
-  ['elec-dept','stop-dept','temp-dept','mach-dept','filter-dept','hist-dept-filter'].forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;
-    const isAll=['filter-dept','hist-dept-filter'].includes(id);
-    el.innerHTML=isAll?'<option value="">جميع الأقسام</option>':'<option value="">اختر القسم</option>';
-    departments.forEach(d=>el.innerHTML+=`<option value="${d.id}">${d.name}</option>`);
-  });
-}
-async function addDepartment(){
-  const name=document.getElementById('dept-name').value.trim();
-  const desc=document.getElementById('dept-desc').value.trim();
-  if(!name){alert('أدخل اسم القسم');return;}
-  const {data:ex}=await sb.from('departments').select('id');
-  if((ex||[]).length>=5){alert('⚠️ الحد الأقصى 5 أقسام');return;}
-  const {error}=await sb.from('departments').insert({name,description:desc});
-  if(error){alert('خطأ: '+error.message);return;}
-  document.getElementById('dept-name').value='';document.getElementById('dept-desc').value='';
-  showSuccess('dept-success');await loadAllDepts();loadDepts();
-}
-async function loadDepts(){
-  const {data}=await sb.from('departments').select('*').order('created_at');
-  departments=data||[];
-  const grid=document.getElementById('dept-grid');
-  if(!data||!data.length){grid.innerHTML='<div class="empty">لا توجد أقسام</div>';return;}
-  const {data:machs}=await sb.from('machines').select('department_id');
-  const cm={};(machs||[]).forEach(m=>cm[m.department_id]=(cm[m.department_id]||0)+1);
-  grid.innerHTML=data.map((d,i)=>`<div class="dept-card">
-    <div class="dept-num">${i+1}</div>
-    <div class="dept-name">${d.name}</div>
-    <div class="dept-count">${cm[d.id]||0}/10 معدات</div>
-    <div class="dept-actions">
-      <button class="btn-edit" onclick="editDept('${d.id}','${d.name.replace(/'/g,"\\'")}','${(d.description||'').replace(/'/g,"\\'")}')">✏️ تعديل</button>
-      <button class="btn-del" onclick="deleteDept('${d.id}')">🗑️ حذف</button>
-    </div></div>`).join('');
-}
-function editDept(id,name,desc){
-  document.getElementById('edit-dept-id').value=id;
-  document.getElementById('edit-dept-name').value=name;
-  document.getElementById('edit-dept-desc').value=desc;
-  document.getElementById('edit-dept-modal').classList.add('show');
-}
-async function saveDept(){
-  const id=document.getElementById('edit-dept-id').value;
-  const name=document.getElementById('edit-dept-name').value.trim();
-  const desc=document.getElementById('edit-dept-desc').value.trim();
-  if(!name){alert('أدخل اسم القسم');return;}
-  await sb.from('departments').update({name,description:desc}).eq('id',id);
-  closeModal('edit-dept-modal');await loadAllDepts();loadDepts();
-}
-async function deleteDept(id){
-  if(!confirm('هل تريد حذف هذا القسم؟'))return;
-  await sb.from('machines').delete().eq('department_id',id);
-  await sb.from('departments').delete().eq('id',id);
-  await loadAllDepts();loadDepts();
-}
-
-// MACHINES
-async function loadMachinesByDept(machId,deptId){
-  const dv=document.getElementById(deptId).value;
-  const el=document.getElementById(machId);
-  el.innerHTML='<option value="">اختر المعدة</option>';
-  if(!dv)return;
-  const {data}=await sb.from('machines').select('*').eq('department_id',dv).order('name');
-  (data||[]).forEach(m=>el.innerHTML+=`<option value="${m.id}">${m.name} (${m.code})</option>`);
-}
-async function addMachine(){
-  const name=document.getElementById('mach-name').value.trim();
-  const code=document.getElementById('mach-code').value.trim();
-  const dept=document.getElementById('mach-dept').value;
-  const status=document.getElementById('mach-status').value;
-  if(!name||!code||!dept){alert('يرجى ملء جميع الحقول');return;}
-  const {data:ex}=await sb.from('machines').select('id').eq('department_id',dept);
-  if((ex||[]).length>=10){alert('⚠️ الحد الأقصى 10 معدات لكل قسم');return;}
-  const {error}=await sb.from('machines').insert({name,code,department_id:dept,status});
-  if(error){alert('خطأ: '+(error.message.includes('unique')?'كود المعدة مستخدم':error.message));return;}
-  document.getElementById('mach-name').value='';document.getElementById('mach-code').value='';
-  showSuccess('mach-success');loadMachines();loadQuickTable();
-}
-async function loadMachines(){
-  const df=document.getElementById('filter-dept')?.value;
-  let q=sb.from('machines').select('*, departments(name)').order('created_at');
-  if(df)q=q.eq('department_id',df);
+// ===== LINES =====
+async function loadLines(){
+  if(!currentCompany&&!isAdmin)return;
+  let q=sb.from('production_lines').select('*, line_resources(*)').order('created_at');
+  if(!isAdmin&&currentCompany)q=q.eq('company_id',currentCompany.id);
   const {data}=await q;
-  const grid=document.getElementById('mach-grid');
-  if(!data||!data.length){grid.innerHTML='<div class="empty">لا توجد معدات</div>';return;}
-  const sL={running:'✅ تشغيل',idle:'⏸️ وقف',fault:'❌ عطل',maintenance:'🔧 صيانة'};
-  grid.innerHTML=data.map(m=>`<div class="machine-card">
-    <div class="m-code">${m.code}</div>
-    <div class="m-name">${m.name}</div>
-    <div class="m-dept">🏢 ${m.departments?.name||'--'}</div>
-    <div><span class="badge ${m.status}">${sL[m.status]}</span></div>
-    <div class="m-actions">
-      <button class="btn-orange" onclick="editMach('${m.id}','${m.name.replace(/'/g,"\\'")}','${m.code}','${m.status}')">✏️</button>
-      <button class="btn-red" onclick="deleteMach('${m.id}')">🗑️</button>
-    </div></div>`).join('');
-}
-function editMach(id,name,code,status){
-  document.getElementById('edit-mach-id').value=id;
-  document.getElementById('edit-mach-name').value=name;
-  document.getElementById('edit-mach-code').value=code;
-  document.getElementById('edit-mach-status').value=status;
-  document.getElementById('edit-mach-modal').classList.add('show');
-}
-async function saveMachine(){
-  const id=document.getElementById('edit-mach-id').value;
-  const name=document.getElementById('edit-mach-name').value.trim();
-  const code=document.getElementById('edit-mach-code').value.trim();
-  const status=document.getElementById('edit-mach-status').value;
-  await sb.from('machines').update({name,code,status}).eq('id',id);
-  closeModal('edit-mach-modal');loadMachines();
-}
-async function deleteMach(id){
-  if(!confirm('هل تريد حذف هذه المعدة؟'))return;
-  await sb.from('machines').delete().eq('id',id);
-  loadMachines();loadQuickTable();
+  productionLines=data||[];
+  // Update dt-line select
+  const dtLine=document.getElementById('dt-line');
+  dtLine.innerHTML='<option value="">اختر الخط</option>';
+  productionLines.forEach(l=>dtLine.innerHTML+=`<option value="${l.id}">${l.name}</option>`);
 }
 
-// QUICK ELECTRICITY
-let allMachines=[];
-async function loadQuickTable(){
-  const date=document.getElementById('quick-date').value;
-  const {data:machs}=await sb.from('machines').select('*, departments(name)').order('department_id').order('name');
-  allMachines=machs||[];
-  const tbody=document.getElementById('quick-table-body');
-  if(!allMachines.length){tbody.innerHTML='<tr><td colspan="5" class="empty">لا توجد معدات</td></tr>';return;}
-  const {data:existing}=await sb.from('electricity_consumption').select('machine_id,consumption_kwh').eq('date',date);
-  const existMap={};(existing||[]).forEach(r=>existMap[r.machine_id]=(existMap[r.machine_id]||0)+Number(r.consumption_kwh));
-  const prevDate=new Date(date);prevDate.setDate(prevDate.getDate()-1);
-  const {data:prev}=await sb.from('electricity_consumption').select('machine_id,consumption_kwh').eq('date',prevDate.toISOString().split('T')[0]);
-  const prevMap={};(prev||[]).forEach(r=>prevMap[r.machine_id]=(prevMap[r.machine_id]||0)+Number(r.consumption_kwh));
-  tbody.innerHTML=allMachines.map((m,i)=>`<tr>
-    <td style="color:var(--text3);font-size:13px">${i+1}</td>
-    <td><div style="font-weight:600">${m.name}</div><div style="font-size:11px;color:var(--blue)">${m.code}</div></td>
-    <td style="font-size:12px;color:var(--text3)">🏢 ${m.departments?.name||'--'}</td>
-    <td style="text-align:center;width:160px"><input type="number" class="quick-input" id="kwh-${m.id}" value="${existMap[m.id]||''}" placeholder="0.00" step="0.01" min="0"></td>
-    <td style="text-align:center;color:var(--text3);font-size:13px">${prevMap[m.id]?prevMap[m.id].toFixed(1)+' kWh':'--'}</td>
-  </tr>`).join('');
+async function loadLinesPage(){
+  await loadLines();
+  const grid=document.getElementById('lines-grid');
+  if(!productionLines.length){grid.innerHTML='<div class="empty">'+(currentLang==='ar'?'لا توجد خطوط - أضف خطاً جديداً':'No lines - Add a new line')+'</div>';return;}
+  const resIcons={electricity:'⚡',water:'💧',oil:'🛢️',gas:'🔥',other:'🔧'};
+  grid.innerHTML=productionLines.map(l=>`
+    <div class="line-card" onclick="selectLine('${l.id}')">
+      <div class="line-name">${l.name}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">${l.capacity_per_hour||0} ${currentLang==='ar'?'وحدة/ساعة':'unit/hr'}</div>
+      <div class="line-resources">
+        ${(l.line_resources||[]).map(r=>`<span class="res-tag ${r.resource_type}">${resIcons[r.resource_type]||'🔧'} ${currentLang==='ar'?getResNameAr(r.resource_type):r.resource_type}</span>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn-red" onclick="event.stopPropagation();deleteLine('${l.id}')" style="font-size:11px;padding:4px 8px">🗑️</button>
+      </div>
+    </div>`).join('');
 }
-async function saveAllElectricity(){
-  const date=document.getElementById('quick-date').value;
-  if(!date||!allMachines.length){alert('لا توجد معدات');return;}
+
+function getResNameAr(type){
+  const n={electricity:'كهرباء',water:'ماء',oil:'بترول',gas:'غاز',other:'أخرى'};
+  return n[type]||type;
+}
+
+function selectLine(id){
+  const line=productionLines.find(l=>l.id===id);
+  if(!line)return;
+  document.getElementById('line-detail').style.display='block';
+  document.getElementById('line-detail-title').textContent='🏭 '+line.name;
+  const resIcons={electricity:'⚡',water:'💧',oil:'🛢️',gas:'🔥',other:'🔧'};
+  document.getElementById('line-resources-list').innerHTML=(line.line_resources||[]).map(r=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg2);border-radius:8px;margin-bottom:8px">
+      <span style="font-size:20px">${resIcons[r.resource_type]||'🔧'}</span>
+      <span style="font-weight:600">${getResNameAr(r.resource_type)}</span>
+      <span style="color:var(--text2);font-size:12px">${r.unit}</span>
+      <button class="btn-red" onclick="deleteResource('${r.id}')" style="margin-right:auto;font-size:11px;padding:3px 8px">🗑️</button>
+    </div>`).join('')||'<div class="empty">لا توجد موارد</div>';
+  document.getElementById('selected-line-id').value=id;
+}
+
+async function addLine(){
+  const nameAr=document.getElementById('line-name-ar').value.trim();
+  const nameEn=document.getElementById('line-name-en').value.trim();
+  const capacity=document.getElementById('line-capacity').value;
+  if(!nameAr){alert(currentLang==='ar'?'أدخل اسم الخط':'Enter line name');return;}
+  if(!currentCompany&&!isAdmin){alert('لا توجد شركة');return;}
+  const {data:line,error}=await sb.from('production_lines').insert({
+    name:nameAr,name_en:nameEn,capacity_per_hour:Number(capacity)||0,
+    company_id:currentCompany?.id
+  }).select().single();
+  if(error){alert('خطأ: '+error.message);return;}
+  // Add resources
+  const resources=[];
+  if(document.getElementById('res-elec').checked)resources.push({line_id:line.id,company_id:currentCompany?.id,resource_type:'electricity',unit:'kWh'});
+  if(document.getElementById('res-water').checked)resources.push({line_id:line.id,company_id:currentCompany?.id,resource_type:'water',unit:'m³'});
+  if(document.getElementById('res-oil').checked)resources.push({line_id:line.id,company_id:currentCompany?.id,resource_type:'oil',unit:'L'});
+  if(document.getElementById('res-gas').checked)resources.push({line_id:line.id,company_id:currentCompany?.id,resource_type:'gas',unit:'m³'});
+  if(resources.length)await sb.from('line_resources').insert(resources);
+  closeModal('add-line-modal');
+  document.getElementById('line-name-ar').value='';
+  document.getElementById('line-name-en').value='';
+  document.getElementById('line-capacity').value='';
+  await loadLines();loadLinesPage();
+}
+
+async function deleteLine(id){
+  if(!confirm(currentLang==='ar'?'هل تريد حذف هذا الخط؟':'Delete this line?'))return;
+  await sb.from('line_resources').delete().eq('line_id',id);
+  await sb.from('production_lines').delete().eq('id',id);
+  document.getElementById('line-detail').style.display='none';
+  await loadLines();loadLinesPage();
+}
+
+// Hidden input for selected line
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.createElement('input');
+  inp.type='hidden';inp.id='selected-line-id';
+  document.body.appendChild(inp);
+});
+
+async function openAddResourceModal(){
+  const lineId=document.getElementById('selected-line-id')?.value;
+  if(!lineId){alert('اختر خطاً أولاً');return;}
+  const type=prompt('نوع المورد:\n1. electricity (كهرباء)\n2. water (ماء)\n3. oil (بترول)\n4. gas (غاز)');
+  if(!type)return;
+  const units={electricity:'kWh',water:'m³',oil:'L',gas:'m³',other:'unit'};
+  await sb.from('line_resources').insert({line_id:lineId,company_id:currentCompany?.id,resource_type:type,unit:units[type]||'unit'});
+  await loadLines();selectLine(lineId);
+}
+
+async function deleteResource(id){
+  if(!confirm('حذف هذا المورد؟'))return;
+  await sb.from('line_resources').delete().eq('id',id);
+  const lineId=document.getElementById('selected-line-id')?.value;
+  await loadLines();if(lineId)selectLine(lineId);
+}
+
+// ===== RESOURCES QUICK TABLE =====
+async function loadResourceTable(){
+  const date=document.getElementById('res-date').value;
+  const shift=document.getElementById('res-shift').value;
+  // Get all resources for all lines
+  const allResources=[];
+  productionLines.forEach(l=>{(l.line_resources||[]).forEach(r=>allResources.push({...r,lineName:l.name,lineId:l.id}));});
+  const thead=document.getElementById('res-table-head');
+  const tbody=document.getElementById('res-table-body');
+  if(!allResources.length){tbody.innerHTML='<tr><td colspan="4" class="empty">أضف خطوط إنتاج أولاً</td></tr>';return;}
+  // Get existing readings
+  const {data:existing}=await sb.from('resource_readings').select('*').eq('reading_date',date).eq('shift',shift);
+  const existMap={};(existing||[]).forEach(r=>existMap[r.resource_id]=r.value);
+  // Get previous shift values
+  const resIcons={electricity:'⚡',water:'💧',oil:'🛢️',gas:'🔥',other:'🔧'};
+  thead.innerHTML=`<tr>
+    <th>#</th>
+    <th>${currentLang==='ar'?'خط الإنتاج':'Production Line'}</th>
+    <th>${currentLang==='ar'?'المورد':'Resource'}</th>
+    <th style="text-align:center">${currentLang==='ar'?'القراءة':'Reading'}</th>
+    <th style="text-align:center">${currentLang==='ar'?'الوحدة':'Unit'}</th>
+  </tr>`;
+  tbody.innerHTML=allResources.map((r,i)=>`
+    <tr>
+      <td style="color:var(--text3);font-size:13px">${i+1}</td>
+      <td style="font-weight:600">${r.lineName}</td>
+      <td>${resIcons[r.resource_type]||'🔧'} ${getResNameAr(r.resource_type)}</td>
+      <td style="text-align:center;width:150px">
+        <input type="number" class="quick-input" id="res-${r.id}" value="${existMap[r.id]||''}" placeholder="0.00" step="0.01" min="0">
+      </td>
+      <td style="text-align:center;color:var(--text2);font-size:13px">${r.unit}</td>
+    </tr>`).join('');
+}
+
+async function saveAllResources(){
+  const date=document.getElementById('res-date').value;
+  const shift=document.getElementById('res-shift').value;
+  if(!date){alert('اختر التاريخ');return;}
   const btn=document.querySelector('.save-all-btn');
   btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';
-  await sb.from('electricity_consumption').delete().in('machine_id',allMachines.map(m=>m.id)).eq('date',date);
+  const allResources=[];
+  productionLines.forEach(l=>{(l.line_resources||[]).forEach(r=>allResources.push({...r,lineId:l.id}));});
+  // Delete existing then insert
+  const resIds=allResources.map(r=>r.id);
+  if(resIds.length)await sb.from('resource_readings').delete().in('resource_id',resIds).eq('reading_date',date).eq('shift',shift);
   const toInsert=[];
-  allMachines.forEach(m=>{
-    const val=document.getElementById('kwh-'+m.id)?.value;
-    if(val&&Number(val)>0)toInsert.push({machine_id:m.id,department_id:m.department_id,consumption_kwh:Number(val),date});
+  allResources.forEach(r=>{
+    const val=document.getElementById('res-'+r.id)?.value;
+    if(val&&Number(val)>=0)toInsert.push({
+      line_id:r.lineId,resource_id:r.id,company_id:currentCompany?.id,
+      value:Number(val),shift,reading_date:date
+    });
   });
-  if(!toInsert.length){btn.disabled=false;btn.textContent='💾 حفظ الكل';alert('لم تدخل أي قيمة!');return;}
-  const {error}=await sb.from('electricity_consumption').insert(toInsert);
-  btn.disabled=false;btn.textContent='💾 حفظ الكل';
-  if(error){alert('خطأ: '+error.message);return;}
-  showSuccess('quick-success');loadQuickTable();loadElectricity();
+  if(toInsert.length)await sb.from('resource_readings').insert(toInsert);
+  btn.disabled=false;btn.textContent=currentLang==='ar'?'💾 حفظ الكل':'💾 Save All';
+  showSuccess('res-success');loadResHistory();
 }
-async function loadElectricity(){
-  const dept=document.getElementById('hist-dept-filter')?.value;
-  const date=document.getElementById('hist-date-filter')?.value;
-  let q=sb.from('electricity_consumption').select('*, machines(name,code), departments(name)').order('date',{ascending:false}).order('recorded_at',{ascending:false}).limit(100);
-  if(dept)q=q.eq('department_id',dept);
-  if(date)q=q.eq('date',date);
+
+async function loadResHistory(){
+  let q=sb.from('resource_readings').select('*, production_lines(name), line_resources(resource_type,unit)').order('reading_date',{ascending:false}).order('recorded_at',{ascending:false}).limit(100);
+  if(!isAdmin&&currentCompany)q=q.eq('company_id',currentCompany.id);
   const {data}=await q;
-  const tb=document.getElementById('elec-table');
-  if(!data||!data.length){tb.innerHTML='<tr><td colspan="5" class="empty">لا توجد سجلات</td></tr>';return;}
+  const tb=document.getElementById('res-history');
+  const resIcons={electricity:'⚡',water:'💧',oil:'🛢️',gas:'🔥',other:'🔧'};
+  if(!data||!data.length){tb.innerHTML='<tr><td colspan="6" class="empty">لا توجد سجلات</td></tr>';return;}
   tb.innerHTML=data.map(r=>`<tr>
-    <td>${r.date}</td><td>${r.departments?.name||'--'}</td>
-    <td>${r.machines?.name||'--'} <span style="color:var(--blue);font-size:11px">(${r.machines?.code||''})</span></td>
-    <td><strong style="color:var(--green)">${Number(r.consumption_kwh).toFixed(2)} kWh</strong></td>
-    <td><button class="btn-red" onclick="delRecord('electricity_consumption','${r.id}')">حذف</button></td>
+    <td>${r.reading_date}</td>
+    <td><span class="badge shift${r.shift}">${r.shift}</span></td>
+    <td>${r.production_lines?.name||'--'}</td>
+    <td>${resIcons[r.line_resources?.resource_type]||'🔧'} ${getResNameAr(r.line_resources?.resource_type)}</td>
+    <td><strong style="color:var(--green)">${r.value} ${r.line_resources?.unit||''}</strong></td>
+    <td><button class="btn-red" onclick="delRes('${r.id}')">حذف</button></td>
   </tr>`).join('');
 }
 
-// STOPPAGES
-async function addStoppage(){
-  const dept=document.getElementById('stop-dept').value;
-  const machine=document.getElementById('stop-machine').value;
-  const type=document.getElementById('stop-type').value;
-  const duration=document.getElementById('stop-duration').value;
-  const reason=document.getElementById('stop-reason').value;
-  const notes=document.getElementById('stop-notes').value;
-  if(!dept||!machine||!type||!duration||!reason){alert('يرجى ملء الحقول الأساسية');return;}
-  const {error}=await sb.from('stoppages').insert({department_id:dept,machine_id:machine,stoppage_type:type,duration_minutes:Number(duration),reason,notes});
-  if(error){alert('خطأ: '+error.message);return;}
-  document.getElementById('stop-duration').value='';document.getElementById('stop-notes').value='';
-  showSuccess('stop-success');loadStoppages();loadStopSummary();
+async function delRes(id){
+  if(!confirm('حذف؟'))return;
+  await sb.from('resource_readings').delete().eq('id',id);
+  loadResHistory();loadResourceTable();
 }
-async function loadStoppages(){
-  const {data}=await sb.from('stoppages').select('*, machines(name), departments(name)').order('started_at',{ascending:false}).limit(50);
-  const tb=document.getElementById('stop-table');
+
+// ===== DOWNTIME =====
+async function addDowntime(){
+  const line=document.getElementById('dt-line').value;
+  const shift=document.getElementById('dt-shift').value;
+  const type=document.getElementById('dt-type').value;
+  const duration=document.getElementById('dt-duration').value;
+  const reason=document.getElementById('dt-reason').value;
+  const detail=document.getElementById('dt-detail').value;
+  const date=document.getElementById('dt-date').value;
+  if(!line||!type||!duration||!reason){alert(currentLang==='ar'?'يرجى ملء الحقول الأساسية':'Please fill required fields');return;}
+  const {error}=await sb.from('line_downtimes').insert({
+    line_id:line,company_id:currentCompany?.id,shift,downtime_type:type,
+    duration_minutes:Number(duration),reason,reason_detail:detail,downtime_date:date
+  });
+  if(error){alert('خطأ: '+error.message);return;}
+  document.getElementById('dt-duration').value='';
+  document.getElementById('dt-detail').value='';
+  showSuccess('dt-success');loadDowntimes();loadDtChart();
+}
+
+async function loadDowntimes(){
+  let q=sb.from('line_downtimes').select('*, production_lines(name)').order('downtime_date',{ascending:false}).order('started_at',{ascending:false}).limit(50);
+  if(!isAdmin&&currentCompany)q=q.eq('company_id',currentCompany.id);
+  const {data}=await q;
+  const tb=document.getElementById('dt-table');
   if(!data||!data.length){tb.innerHTML='<tr><td colspan="8" class="empty">لا توجد سجلات</td></tr>';return;}
   const tL={short:'⏱️ قصير',long:'🛑 طويل'};
-  const rL={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',spare_parts:'🔩 قطع غيار',raw_materials:'📦 مواد خام',quality_defect:'❌ جودة',other:'📝 أخرى'};
+  const rL={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',operational:'🔄 تشغيل',raw_materials:'📦 مواد خام',quality:'❌ جودة',other:'📝 أخرى'};
   tb.innerHTML=data.map(r=>`<tr>
-    <td>${new Date(r.started_at).toLocaleDateString('ar-SA')}</td>
-    <td>${r.departments?.name||'--'}</td><td>${r.machines?.name||'--'}</td>
-    <td><span class="badge ${r.stoppage_type}">${tL[r.stoppage_type]}</span></td>
+    <td>${r.downtime_date}</td>
+    <td><span class="badge shift${r.shift}">${r.shift}</span></td>
+    <td>${r.production_lines?.name||'--'}</td>
+    <td><span class="badge ${r.downtime_type}">${tL[r.downtime_type]||r.downtime_type}</span></td>
     <td>${r.duration_minutes} د</td>
     <td><span class="badge ${r.reason}">${rL[r.reason]||r.reason}</span></td>
-    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.notes||'--'}</td>
-    <td><button class="btn-red" onclick="delRecord('stoppages','${r.id}')">حذف</button></td>
+    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.reason_detail||'--'}</td>
+    <td><button class="btn-red" onclick="delDt('${r.id}')">حذف</button></td>
   </tr>`).join('');
 }
-async function loadStopSummary(){
-  const {data}=await sb.from('stoppages').select('reason');
-  const el=document.getElementById('stop-summary');
-  if(!data||!data.length){el.innerHTML='<div class="empty">لا توجد سجلات</div>';return;}
-  const labels={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',spare_parts:'🔩 قطع غيار',raw_materials:'📦 مواد خام',quality_defect:'❌ جودة',other:'📝 أخرى'};
-  const colors={electrical:'blue',mechanical:'orange',spare_parts:'purple',raw_materials:'yellow',quality_defect:'red',other:'green'};
+
+async function loadDtChart(){
+  let q=sb.from('line_downtimes').select('reason');
+  if(!isAdmin&&currentCompany)q=q.eq('company_id',currentCompany.id);
+  const {data}=await q;
+  const el=document.getElementById('dt-chart');
+  if(!data||!data.length){el.innerHTML='<div class="empty">لا توجد بيانات</div>';return;}
+  const labels={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',operational:'🔄 تشغيل',raw_materials:'📦 مواد خام',quality:'❌ جودة',other:'📝 أخرى'};
+  const colors={electrical:'blue',mechanical:'orange',operational:'green',raw_materials:'yellow',quality:'red',other:'purple'};
   const grouped={};data.forEach(r=>{grouped[r.reason]=(grouped[r.reason]||0)+1;});
   const max=Math.max(...Object.values(grouped));
-  el.innerHTML=Object.entries(grouped).map(([k,v])=>
+  el.innerHTML=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).map(([k,v])=>
     `<div class="bar-row"><div class="bar-label" style="font-size:11px">${labels[k]||k}</div><div class="bar-track"><div class="bar-fill ${colors[k]||'green'}" style="width:${max?Math.max(8,v/max*100):0}%">${v}</div></div></div>`
   ).join('');
 }
 
-// TEMPERATURE
-async function addTemperature(){
-  const dept=document.getElementById('temp-dept').value;
-  const temp=document.getElementById('temp-value').value;
-  if(!dept||!temp){alert('يرجى ملء جميع الحقول');return;}
-  const {error}=await sb.from('temperature_readings').insert({department_id:dept,temperature:Number(temp)});
-  if(error){alert('خطأ: '+error.message);return;}
-  document.getElementById('temp-value').value='';
-  showSuccess('temp-success');loadTemperature();loadTempLatest();
-}
-async function loadTemperature(){
-  const {data}=await sb.from('temperature_readings').select('*, departments(name)').order('recorded_at',{ascending:false}).limit(50);
-  const tb=document.getElementById('temp-table');
-  if(!data||!data.length){tb.innerHTML='<tr><td colspan="5" class="empty">لا توجد سجلات</td></tr>';return;}
-  tb.innerHTML=data.map(r=>{
-    const t=Number(r.temperature);
-    const cls=t<25?'running':t<35?'maintenance':'fault';
-    const label=t<25?'طبيعية':t<35?'دافئة':'مرتفعة ⚠️';
-    return `<tr><td>${new Date(r.recorded_at).toLocaleString('ar-SA')}</td>
-      <td>${r.departments?.name||'--'}</td><td><strong>${t}°C</strong></td>
-      <td><span class="badge ${cls}">${label}</span></td>
-      <td><button class="btn-red" onclick="delRecord('temperature_readings','${r.id}')">حذف</button></td></tr>`;
-  }).join('');
-}
-async function loadTempLatest(){
-  const el=document.getElementById('temp-latest');
-  if(!departments.length){el.innerHTML='<div class="empty">لا توجد أقسام</div>';return;}
-  let html='';
-  for(const dept of departments){
-    const {data:temps}=await sb.from('temperature_readings').select('temperature').eq('department_id',dept.id).order('recorded_at',{ascending:false}).limit(1);
-    const temp=temps?.[0]?.temperature;
-    const cls=temp==null?'cool':temp<25?'cool':temp<35?'warm':'hot';
-    html+=`<div class="temp-card"><div class="temp-dept">${dept.name}</div><div class="temp-circle ${cls}">${temp!=null?temp+'°':'--'}</div></div>`;
-  }
-  el.innerHTML=html||'<div class="empty">لا توجد قراءات</div>';
+async function delDt(id){
+  if(!confirm('حذف؟'))return;
+  await sb.from('line_downtimes').delete().eq('id',id);
+  loadDowntimes();loadDtChart();
 }
 
-// DASHBOARD
+// ===== DASHBOARD =====
 async function loadDashboard(){
   const today=new Date().toISOString().split('T')[0];
-  const {data:elec}=await sb.from('electricity_consumption').select('consumption_kwh').eq('date',today);
-  document.getElementById('stat-kwh').textContent=(elec||[]).reduce((s,r)=>s+Number(r.consumption_kwh),0).toFixed(1);
-  const {data:stops}=await sb.from('stoppages').select('stoppage_type,reason').gte('started_at',today+'T00:00:00');
-  document.getElementById('stat-short').textContent=(stops||[]).filter(s=>s.stoppage_type==='short').length;
-  document.getElementById('stat-long').textContent=(stops||[]).filter(s=>s.stoppage_type==='long').length;
-  const {data:machs}=await sb.from('machines').select('status');
-  document.getElementById('stat-machines').textContent=(machs||[]).filter(m=>m.status==='running').length;
-  document.getElementById('stat-total').textContent=(machs||[]).length;
-  const {data:elecAll}=await sb.from('electricity_consumption').select('consumption_kwh,machines(name)').eq('date',today);
-  const elecEl=document.getElementById('dash-elec-chart');
-  if(!elecAll||!elecAll.length){elecEl.innerHTML='<div class="empty">لا توجد بيانات اليوم</div>';}
+  updateClock();
+  // Resources today
+  let rq=sb.from('resource_readings').select('value,line_resources(resource_type)').eq('reading_date',today);
+  if(!isAdmin&&currentCompany)rq=rq.eq('company_id',currentCompany.id);
+  const {data:readings}=await rq;
+  const elecTotal=(readings||[]).filter(r=>r.line_resources?.resource_type==='electricity').reduce((s,r)=>s+Number(r.value),0);
+  const waterTotal=(readings||[]).filter(r=>r.line_resources?.resource_type==='water').reduce((s,r)=>s+Number(r.value),0);
+  document.getElementById('stat-elec').textContent=elecTotal.toFixed(1);
+  document.getElementById('stat-water').textContent=waterTotal.toFixed(1);
+  // Downtimes today
+  let dq=sb.from('line_downtimes').select('duration_minutes,reason').eq('downtime_date',today);
+  if(!isAdmin&&currentCompany)dq=dq.eq('company_id',currentCompany.id);
+  const {data:stops}=await dq;
+  document.getElementById('stat-stops').textContent=(stops||[]).length;
+  const totalMin=(stops||[]).reduce((s,r)=>s+Number(r.duration_minutes),0);
+  document.getElementById('stat-downtime').textContent=totalMin.toFixed(0);
+  // OEE
+  await loadOEE(totalMin);
+  // Charts
+  await loadDashCharts(stops,readings);
+}
+
+async function loadOEE(totalDownMin){
+  const el=document.getElementById('oee-display');
+  if(!productionLines.length){el.innerHTML='<div class="empty">أضف خطوط إنتاج أولاً</div>';return;}
+  // Shift duration = 8 hours = 480 min
+  const shiftMin=480;
+  const availability=Math.max(0,Math.min(100,((shiftMin-totalDownMin)/shiftMin*100)));
+  const performance=85; // placeholder
+  const quality=95; // placeholder
+  const oee=(availability/100*performance/100*quality/100*100);
+  const getClass=(v)=>v>=85?'high':v>=65?'mid':'low';
+  el.innerHTML=`
+    <div class="oee-item">
+      <div class="oee-circle ${getClass(availability)}">${availability.toFixed(0)}%</div>
+      <div style="font-weight:700">${currentLang==='ar'?'التوافر':'Availability'}</div>
+      <div style="font-size:12px;color:var(--text2)">${currentLang==='ar'?'وقت التشغيل الفعلي':'Actual uptime'}</div>
+    </div>
+    <div class="oee-item">
+      <div class="oee-circle ${getClass(performance)}">${performance}%</div>
+      <div style="font-weight:700">${currentLang==='ar'?'الأداء':'Performance'}</div>
+      <div style="font-size:12px;color:var(--text2)">${currentLang==='ar'?'كفاءة الإنتاج':'Production efficiency'}</div>
+    </div>
+    <div class="oee-item">
+      <div class="oee-circle ${getClass(oee)}">${oee.toFixed(0)}%</div>
+      <div style="font-weight:700">OEE</div>
+      <div style="font-size:12px;color:var(--text2)">${currentLang==='ar'?'الكفاءة الكلية':'Overall efficiency'}</div>
+    </div>`;
+}
+
+async function loadDashCharts(stops,readings){
+  // Stop chart
+  const stopEl=document.getElementById('dash-stop-chart');
+  if(!stops||!stops.length){stopEl.innerHTML='<div class="empty">✅ لا توجد توقفات اليوم</div>';}
   else{
-    const grouped={};elecAll.forEach(r=>{const k=r.machines?.name||'غير محدد';grouped[k]=(grouped[k]||0)+Number(r.consumption_kwh);});
+    const labels={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',operational:'🔄 تشغيل',raw_materials:'📦 مواد خام',quality:'❌ جودة',other:'📝 أخرى'};
+    const colors={electrical:'blue',mechanical:'orange',operational:'green',raw_materials:'yellow',quality:'red',other:'purple'};
+    const grouped={};stops.forEach(r=>{grouped[r.reason]=(grouped[r.reason]||0)+1;});
     const max=Math.max(...Object.values(grouped));
-    const colors=['green','blue','orange','red','purple','yellow'];
-    elecEl.innerHTML=Object.entries(grouped).map(([k,v],i)=>
+    stopEl.innerHTML=Object.entries(grouped).map(([k,v])=>
+      `<div class="bar-row"><div class="bar-label" style="font-size:11px">${labels[k]||k}</div><div class="bar-track"><div class="bar-fill ${colors[k]||'green'}" style="width:${max?Math.max(8,v/max*100):0}%">${v}</div></div></div>`
+    ).join('');
+  }
+  // Elec by line
+  const elecEl=document.getElementById('dash-elec-chart');
+  const elecByLine={};
+  (readings||[]).filter(r=>r.line_resources?.resource_type==='electricity').forEach(r=>{
+    const ln=productionLines.find(l=>l.line_resources?.some(lr=>lr.id===r.resource_id))?.name||'--';
+    elecByLine[ln]=(elecByLine[ln]||0)+Number(r.value);
+  });
+  if(!Object.keys(elecByLine).length){elecEl.innerHTML='<div class="empty">لا توجد بيانات</div>';}
+  else{
+    const max=Math.max(...Object.values(elecByLine));
+    const colors=['green','blue','orange','red','purple'];
+    elecEl.innerHTML=Object.entries(elecByLine).map(([k,v],i)=>
       `<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill ${colors[i%colors.length]}" style="width:${max?Math.max(8,v/max*100):0}%">${v.toFixed(1)}</div></div></div>`
     ).join('');
   }
-  const stopEl=document.getElementById('dash-stop-chart');
-  if(!stops||!stops.length){stopEl.innerHTML='<div class="empty">لا توجد توقفات اليوم ✅</div>';}
-  else{
-    const grouped={};stops.forEach(r=>{grouped[r.stoppage_type]=(grouped[r.stoppage_type]||0)+1;});
-    const max=Math.max(...Object.values(grouped));
-    stopEl.innerHTML=Object.entries(grouped).map(([k,v])=>
-      `<div class="bar-row"><div class="bar-label">${k==='short'?'⏱️ قصير':'🛑 طويل'}</div><div class="bar-track"><div class="bar-fill ${k==='short'?'orange':'red'}" style="width:${max?Math.max(8,v/max*100):0}%">${v}</div></div></div>`
-    ).join('');
-  }
-  const tempEl=document.getElementById('dash-temp');
-  if(!departments.length){tempEl.innerHTML='<div class="empty">أضف أقساماً أولاً</div>';return;}
-  let html='';
-  for(const dept of departments){
-    const {data:temps}=await sb.from('temperature_readings').select('temperature').eq('department_id',dept.id).order('recorded_at',{ascending:false}).limit(1);
-    const temp=temps?.[0]?.temperature;
-    const cls=temp==null?'cool':temp<25?'cool':temp<35?'warm':'hot';
-    html+=`<div class="temp-card"><div class="temp-dept">${dept.name}</div><div class="temp-circle ${cls}">${temp!=null?temp+'°':'--'}</div></div>`;
-  }
-  tempEl.style.gridTemplateColumns=`repeat(${Math.min(departments.length,5)},1fr)`;
-  tempEl.innerHTML=html;
 }
 
-// REPORTS
+// ===== REPORTS =====
 async function loadReports(){
-  const ms=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString();
-  const {data:elec}=await sb.from('electricity_consumption').select('consumption_kwh').gte('recorded_at',ms);
-  document.getElementById('rep-kwh').textContent=(elec||[]).reduce((s,r)=>s+Number(r.consumption_kwh),0).toFixed(1);
-  const {data:stops}=await sb.from('stoppages').select('stoppage_type,reason').gte('started_at',ms);
-  document.getElementById('rep-short').textContent=(stops||[]).filter(s=>s.stoppage_type==='short').length;
-  document.getElementById('rep-long').textContent=(stops||[]).filter(s=>s.stoppage_type==='long').length;
+  const ms=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().split('T')[0];
+  let rq=sb.from('resource_readings').select('value,line_resources(resource_type)').gte('reading_date',ms);
+  if(!isAdmin&&currentCompany)rq=rq.eq('company_id',currentCompany.id);
+  const {data:readings}=await rq;
+  document.getElementById('rep-elec').textContent=((readings||[]).filter(r=>r.line_resources?.resource_type==='electricity').reduce((s,r)=>s+Number(r.value),0)).toFixed(1);
+  document.getElementById('rep-water').textContent=((readings||[]).filter(r=>r.line_resources?.resource_type==='water').reduce((s,r)=>s+Number(r.value),0)).toFixed(1);
+  let dq=sb.from('line_downtimes').select('reason,duration_minutes').gte('downtime_date',ms);
+  if(!isAdmin&&currentCompany)dq=dq.eq('company_id',currentCompany.id);
+  const {data:stops}=await dq;
+  document.getElementById('rep-stops').textContent=(stops||[]).length;
+  // OEE average
+  const totalMin=(stops||[]).reduce((s,r)=>s+Number(r.duration_minutes),0);
+  const daysInMonth=new Date().getDate();
+  const shiftMin=480*3*daysInMonth;
+  const oee=Math.max(0,Math.min(100,(shiftMin-totalMin)/shiftMin*100*0.85*0.95));
+  document.getElementById('rep-oee').textContent=oee.toFixed(0);
+  // 7 day chart
   const d7=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-  const {data:e7}=await sb.from('electricity_consumption').select('consumption_kwh,date').gte('date',d7);
-  const ebd={};(e7||[]).forEach(r=>{ebd[r.date]=(ebd[r.date]||0)+Number(r.consumption_kwh);});
+  let eq=sb.from('resource_readings').select('value,reading_date,line_resources(resource_type)').gte('reading_date',d7).eq('line_resources.resource_type','electricity');
+  if(!isAdmin&&currentCompany)eq=eq.eq('company_id',currentCompany.id);
+  const {data:e7}=await eq;
+  const ebd={};(e7||[]).filter(r=>r.line_resources?.resource_type==='electricity').forEach(r=>{ebd[r.reading_date]=(ebd[r.reading_date]||0)+Number(r.value);});
   const rEl=document.getElementById('rep-elec-chart');
   if(Object.keys(ebd).length){
     const max=Math.max(...Object.values(ebd));
@@ -993,11 +1260,12 @@ async function loadReports(){
       `<div class="bar-row"><div class="bar-label" style="font-size:11px">${d.slice(5)}</div><div class="bar-track"><div class="bar-fill green" style="width:${max?Math.max(8,v/max*100):0}%">${v.toFixed(1)}</div></div></div>`
     ).join('');
   }else rEl.innerHTML='<div class="empty">لا توجد بيانات</div>';
+  // Stop reasons
   const rg={};(stops||[]).forEach(r=>{rg[r.reason]=(rg[r.reason]||0)+1;});
   const rSt=document.getElementById('rep-stop-chart');
   if(Object.keys(rg).length){
-    const labels={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',spare_parts:'🔩 قطع غيار',raw_materials:'📦 مواد خام',quality_defect:'❌ جودة',other:'📝 أخرى'};
-    const colors={electrical:'blue',mechanical:'orange',spare_parts:'purple',raw_materials:'yellow',quality_defect:'red',other:'green'};
+    const labels={electrical:'⚡ كهرباء',mechanical:'🔧 ميكانيكا',operational:'🔄 تشغيل',raw_materials:'📦 مواد خام',quality:'❌ جودة',other:'📝 أخرى'};
+    const colors={electrical:'blue',mechanical:'orange',operational:'green',raw_materials:'yellow',quality:'red',other:'purple'};
     const max=Math.max(...Object.values(rg));
     rSt.innerHTML=Object.entries(rg).map(([k,v])=>
       `<div class="bar-row"><div class="bar-label" style="font-size:11px">${labels[k]||k}</div><div class="bar-track"><div class="bar-fill ${colors[k]||'green'}" style="width:${max?Math.max(8,v/max*100):0}%">${v}</div></div></div>`
@@ -1005,90 +1273,68 @@ async function loadReports(){
   }else rSt.innerHTML='<div class="empty">لا توجد بيانات</div>';
 }
 
+// ===== EXPORT EXCEL =====
+async function exportExcel(){
+  let rq=sb.from('resource_readings').select('*, production_lines(name), line_resources(resource_type,unit)').order('reading_date',{ascending:false});
+  if(!isAdmin&&currentCompany)rq=rq.eq('company_id',currentCompany.id);
+  const {data:readings}=await rq;
+  let dq=sb.from('line_downtimes').select('*, production_lines(name)').order('downtime_date',{ascending:false});
+  if(!isAdmin&&currentCompany)dq=dq.eq('company_id',currentCompany.id);
+  const {data:stops}=await dq;
+  // Build CSV
+  let csv='G-Tech Smart Maintenance - تقرير شامل\n\n';
+  csv+='=== الموارد ===\n';
+  csv+='التاريخ,الوردية,الخط,المورد,القيمة,الوحدة\n';
+  (readings||[]).forEach(r=>{
+    csv+=`${r.reading_date},${r.shift},${r.production_lines?.name||''},${getResNameAr(r.line_resources?.resource_type)},${r.value},${r.line_resources?.unit||''}\n`;
+  });
+  csv+='\n=== التوقفات ===\n';
+  csv+='التاريخ,الوردية,الخط,النوع,المدة(دقائق),السبب,التفاصيل\n';
+  const rL={electrical:'كهرباء',mechanical:'ميكانيكا',operational:'تشغيل',raw_materials:'مواد خام',quality:'جودة',other:'أخرى'};
+  (stops||[]).forEach(r=>{
+    csv+=`${r.downtime_date},${r.shift},${r.production_lines?.name||''},${r.downtime_type==='short'?'قصير':'طويل'},${r.duration_minutes},${rL[r.reason]||r.reason},${r.reason_detail||''}\n`;
+  });
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`GTech_Report_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+// ===== ADMIN =====
 async function loadAdminPage(){
   if(!isAdmin)return;
-  const [{data:users},{data:elec},{data:stops},{data:temps}]=await Promise.all([
+  const [{data:companies},{data:users},{data:lines},{data:stops}]=await Promise.all([
+    sb.from('companies').select('*, user_profiles(full_name,phone,email,created_at)'),
     sb.from('user_profiles').select('id'),
-    sb.from('electricity_consumption').select('id'),
-    sb.from('stoppages').select('id'),
-    sb.from('temperature_readings').select('id')
+    sb.from('production_lines').select('id'),
+    sb.from('line_downtimes').select('id')
   ]);
-  document.getElementById('admin-stat-users').textContent=(users||[]).length;
-  document.getElementById('admin-stat-elec').textContent=(elec||[]).length;
-  document.getElementById('admin-stat-stops').textContent=(stops||[]).length;
-  document.getElementById('admin-stat-temps').textContent=(temps||[]).length;
-  await loadAdminUsers();
-  await loadActivityLog();
-}
-
-async function loadAdminUsers(){
-  const {data:profiles}=await sb.from('user_profiles').select('*').order('created_at',{ascending:false});
-  const el=document.getElementById('admin-users-list');
-  if(!profiles||!profiles.length){el.innerHTML='<div class="empty">لا يوجد مستخدمون</div>';return;}
-  el.innerHTML=profiles.map(u=>`
-    <div class="user-card">
-      <div class="u-avatar">${u.role==='admin'?'👑':'👤'}</div>
-      <div class="u-info">
-        <div class="u-name">${u.full_name||'بدون اسم'}</div>
-        <div class="u-email">📧 ${u.phone?'جوال: '+u.phone:''}</div>
-        <div class="u-phone">🗓️ تاريخ التسجيل: ${new Date(u.created_at).toLocaleDateString('ar-SA')}</div>
-      </div>
-      <div class="u-actions">
-        <span class="badge ${u.role==='admin'?'admin':'user'}">${u.role==='admin'?'👑 Admin':'👤 مستخدم'}</span>
-      </div>
+  document.getElementById('adm-companies').textContent=(companies||[]).length;
+  document.getElementById('adm-users').textContent=(users||[]).length;
+  document.getElementById('adm-lines').textContent=(lines||[]).length;
+  document.getElementById('adm-stops').textContent=(stops||[]).length;
+  const el=document.getElementById('adm-companies-list');
+  if(!companies||!companies.length){el.innerHTML='<div class="empty">لا توجد شركات</div>';return;}
+  el.innerHTML=companies.map(c=>`
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">🏢 ${c.name}</div>
+      ${(c.user_profiles||[]).map(u=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:8px;background:var(--bg2);border-radius:8px;margin-bottom:6px">
+          <span>👤</span>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:13px">${u.full_name||'--'}</div>
+            <div style="font-size:12px;color:var(--text2)">📱 ${u.phone||'--'}</div>
+          </div>
+          ${u.phone?`<a href="https://wa.me/966${u.phone.replace(/^0/,'')}" target="_blank" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25D366;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none">💬 واتساب</a>`:''}
+          ${u.phone?`<a href="tel:${u.phone}" style="background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3);color:var(--blue);padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none">📞 اتصال</a>`:''}
+        </div>`).join('')}
     </div>`).join('');
 }
 
-async function loadActivityLog(filter='all'){
-  allLogs=[];
-  const rL={electrical:'كهرباء',mechanical:'ميكانيكا',spare_parts:'قطع غيار',raw_materials:'مواد خام',quality_defect:'جودة',other:'أخرى'};
-  if(filter==='all'||filter==='elec'){
-    const {data}=await sb.from('electricity_consumption').select('*, machines(name), departments(name)').order('recorded_at',{ascending:false}).limit(30);
-    (data||[]).forEach(r=>allLogs.push({type:'elec',icon:'⚡',title:`استهلاك - ${r.machines?.name||'--'}`,detail:`${r.departments?.name||'--'} | ${Number(r.consumption_kwh).toFixed(2)} kWh | ${r.date}`,time:r.recorded_at}));
-  }
-  if(filter==='all'||filter==='stop'){
-    const {data}=await sb.from('stoppages').select('*, machines(name), departments(name)').order('started_at',{ascending:false}).limit(30);
-    (data||[]).forEach(r=>allLogs.push({type:'stop',icon:'🛑',title:`توقف ${r.stoppage_type==='short'?'قصير':'طويل'} - ${r.machines?.name||'--'}`,detail:`${r.departments?.name||'--'} | ${r.duration_minutes} دقيقة | ${rL[r.reason]||r.reason}`,time:r.started_at}));
-  }
-  if(filter==='all'||filter==='temp'){
-    const {data}=await sb.from('temperature_readings').select('*, departments(name)').order('recorded_at',{ascending:false}).limit(30);
-    (data||[]).forEach(r=>allLogs.push({type:'temp',icon:'🌡️',title:`حرارة - ${r.departments?.name||'--'}`,detail:`${Number(r.temperature)}°C`,time:r.recorded_at}));
-  }
-  if(filter==='all'||filter==='mach'){
-    const {data}=await sb.from('machines').select('*, departments(name)').order('created_at',{ascending:false}).limit(20);
-    (data||[]).forEach(r=>allLogs.push({type:'mach',icon:'🏭',title:`معدة - ${r.name}`,detail:`${r.departments?.name||'--'} | كود: ${r.code}`,time:r.created_at}));
-  }
-  allLogs.sort((a,b)=>new Date(b.time)-new Date(a.time));
-  renderLog();
-}
-
-function renderLog(){
-  const el=document.getElementById('admin-log');
-  if(!allLogs.length){el.innerHTML='<div class="empty">لا توجد سجلات</div>';return;}
-  el.innerHTML=allLogs.slice(0,50).map(log=>`
-    <div class="log-item">
-      <div class="log-icon ${log.type}">${log.icon}</div>
-      <div class="log-info">
-        <div class="log-title">${log.title}</div>
-        <div class="log-detail">${log.detail}</div>
-      </div>
-      <div class="log-time">${new Date(log.time).toLocaleString('ar-SA')}</div>
-    </div>`).join('');
-}
-
-function filterLog(type,btn){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadActivityLog(type);
-}
-
-async function delRecord(table,id){
-  if(!confirm('هل تريد حذف هذا السجل؟'))return;
-  await sb.from(table).delete().eq('id',id);
-  if(table==='electricity_consumption'){loadElectricity();loadQuickTable();}
-  else if(table==='stoppages'){loadStoppages();loadStopSummary();}
-  else if(table==='temperature_readings'){loadTemperature();loadTempLatest();}
-}
+// INIT LANG
+const savedLang=localStorage.getItem('lang')||'ar';
+setLang(savedLang);
 </script>
 </body>
 </html>
