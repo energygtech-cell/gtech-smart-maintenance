@@ -1046,7 +1046,8 @@ async function loadDashboard(){
 
 function loadOEE(totalDownMin){
   const el=document.getElementById('oee-display');
-  const shiftMin=1440; // 3 ورديات × 480 دقيقة;
+  const shiftMin=480;
+const avail=Math.max(0,Math.min(100,((shiftMin-totalDownMin)/shiftMin*100)));
   const avail=Math.max(0,Math.min(100,((shiftMin-totalDownMin)/shiftMin*100)));
   const perf=85;
   const qual=95;
